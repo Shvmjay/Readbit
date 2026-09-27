@@ -20,8 +20,11 @@ export function I18nProvider({ initialLocale, children }: { initialLocale: Langu
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
+// Used when a component renders outside the provider (e.g. a boundary rendered without the root layout during
+// prerendering): fall back to the default language rather than crashing the page.
+const fallbackDict = getDictionary("en");
+const FALLBACK: Ctx = { locale: "en", t: (key, vars) => translate(fallbackDict, key, vars), setLocale: () => undefined };
+
 export function useT() {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useT must be used inside I18nProvider");
-  return ctx;
+  return useContext(I18nContext) ?? FALLBACK;
 }

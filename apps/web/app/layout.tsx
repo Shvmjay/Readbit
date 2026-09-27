@@ -5,6 +5,9 @@ import { Providers } from "./providers";
 import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE } from "@/lib/i18n";
 import { themeBootScript } from "@/lib/theme";
 
+// Every page is localized from the rb_locale cookie, so rendering is always per-request.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: { default: "Readbit — Read more. Learn better.", template: "%s · Readbit" },
   description: "Upload your book and get faithful, source-grounded summaries and adaptive lessons built only from your own book.",

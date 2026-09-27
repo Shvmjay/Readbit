@@ -2,8 +2,6 @@
 FROM python:3.11-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PROMPTS_DIR=/app/prompts
 WORKDIR /app/services/api
-RUN apt-get update && apt-get install -y --no-install-recommends libxml2 libxslt1.1 \
-    && rm -rf /var/lib/apt/lists/*
 COPY services/api/pyproject.toml ./
 # Install dependencies first (cached layer), then the application source.
 RUN pip install --upgrade pip && python -c "import tomllib;print('\\n'.join(tomllib.load(open('pyproject.toml','rb'))['project']['dependencies']))" > /tmp/req.txt \

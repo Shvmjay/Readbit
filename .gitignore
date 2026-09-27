@@ -24,3 +24,4 @@ evals/reports/*.json
 dist/
 build/
 *.egg-info/
+evals/reports/*.md
