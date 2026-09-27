@@ -1,0 +1,66 @@
+{
+  "id": "backyard_compost",
+  "license": "Original synthetic text written for the Readbit test corpus. CC0.",
+  "title": "Backyard Compost: A Practical Handbook",
+  "author": "Daniel Okafor",
+  "language": "en",
+  "genre": "technical",
+  "chapters": [
+    {
+      "title": "Chapter 1: What Compost Needs",
+      "sections": [
+        {
+          "heading": "The four ingredients",
+          "paragraphs": [
+            "A compost pile needs four things to work: carbon-rich material, nitrogen-rich material, water and air. The handbook calls carbon-rich material browns and nitrogen-rich material greens. Dry leaves, straw and shredded cardboard are browns; vegetable scraps, coffee grounds and fresh grass clippings are greens.",
+            "The handbook recommends a ratio of roughly three parts browns to one part greens by volume. A pile with too many greens becomes wet and smells of ammonia, while a pile with too many browns stays dry and decomposes very slowly."
+          ]
+        },
+        {
+          "heading": "Moisture and air",
+          "paragraphs": [
+            "The pile should feel like a wrung-out sponge: damp throughout but never dripping. Microbes that break down organic matter need water to survive, but a waterlogged pile loses the air those microbes also require.",
+            "Turning the pile once a week adds oxygen. The author notes that an unturned pile will still become compost eventually, but it can take a year or more instead of two to three months."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapter 2: Heat and Troubleshooting",
+      "sections": [
+        {
+          "heading": "Hot composting",
+          "paragraphs": [
+            "An active pile heats up because microbes release energy as they digest material. The handbook states that a well-built pile of at least one cubic metre can reach between 55 and 65 degrees Celsius in its centre within a few days.",
+            "Sustained heat in that range kills most weed seeds and many plant pathogens. Smaller piles lose heat too quickly to reach these temperatures, which is why the handbook advises against piles smaller than one cubic metre for hot composting."
+          ]
+        },
+        {
+          "heading": "Common problems",
+          "paragraphs": [
+            "A smell of rotten eggs signals that the pile lacks air; the fix is to turn it and mix in browns. A pile that stays cold usually lacks greens or water. Fruit flies are a sign that food scraps are exposed, and the handbook recommends burying fresh scraps under a layer of browns.",
+            "The handbook warns against adding meat, dairy and oily food to a home pile, because they attract rodents and decompose unevenly. It also advises keeping diseased plants out of piles that do not reliably get hot."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapter 3: Using Finished Compost",
+      "sections": [
+        {
+          "heading": "Knowing when it is ready",
+          "paragraphs": [
+            "Finished compost is dark, crumbly and smells like forest soil. The original materials should no longer be recognisable, except perhaps for a few woody pieces, which can be screened out and returned to a new pile.",
+            "The handbook recommends letting compost cure for about four weeks after the pile stops heating. Curing allows the remaining decomposition to finish so that the compost does not compete with plants for nitrogen."
+          ]
+        },
+        {
+          "heading": "Applying compost",
+          "paragraphs": [
+            "Spread two to five centimetres of compost over garden beds each spring and work it lightly into the top layer of soil. For potted plants, the handbook suggests mixing no more than one part compost with three parts potting mix, because pure compost can hold too much water."
+          ]
+        }
+      ]
+    }
+  ]
+}

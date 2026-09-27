@@ -1,0 +1,49 @@
+{
+  "id": "attentive_mind",
+  "license": "Original synthetic text written for the Readbit test corpus. CC0.",
+  "title": "The Attentive Mind",
+  "author": "Mira Solen",
+  "language": "en",
+  "genre": "narrative nonfiction",
+  "chapters": [
+    {
+      "title": "Chapter 1: The Economy of Attention",
+      "paragraphs": [
+        "Attention is the scarcest resource a reader owns. The author argues that every hour contains a fixed amount of focus, and that each interruption spends part of it before any real work begins. She calls this cost the switching tax, and she defines it as the time the mind needs to rebuild context after moving from one task to another.",
+        "The switching tax is small for a single interruption, but it compounds. In the author's account of a newsroom she observed for six weeks, editors who checked messages every five minutes finished fewer articles than colleagues who checked messages twice an hour, even though both groups worked the same number of hours. The author treats this observation as an illustration rather than a controlled experiment.",
+        "The chapter distinguishes two kinds of attention. Directed attention is the effortful focus we choose to apply to a task, while ambient attention is the passive awareness that notices sounds, movement and novelty around us. Directed attention tires with use; ambient attention does not tire, but it constantly competes for the same limited capacity.",
+        "The author does not claim that interruptions are always harmful. She notes that short, planned breaks can restore directed attention, and that an interruption carrying urgent information may be worth its cost. Her objection is to unplanned interruptions that arrive by habit rather than by need.",
+        "The chapter concludes that protecting attention is an act of budgeting. A reader who knows the price of each interruption can decide which ones to pay for, instead of paying for all of them by default."
+      ]
+    },
+    {
+      "title": "Chapter 2: Rituals of Deep Reading",
+      "paragraphs": [
+        "Deep reading, in the author's definition, is reading in which the reader builds a mental model of the argument rather than collecting isolated sentences. She contrasts it with skimming, which is useful for locating information but rarely produces lasting understanding.",
+        "The author recommends a three-step ritual before any serious reading session. First, the reader writes down a single question the text should answer. Second, the reader removes the phone from the room rather than merely silencing it. Third, the reader sets a fixed session length, which the author suggests should be between twenty-five and fifty minutes.",
+        "The second step is the most important, according to the chapter. The author reports that people in her reading workshops who kept a silenced phone on the desk described their sessions as more distracted than people who left the phone in another room. She explains the result with the idea of latent pull: an object that could interrupt us draws on ambient attention even when it stays silent.",
+        "A caveat follows immediately. The author acknowledges that her workshop groups were small and self-selected, so the comparison cannot show how large the effect is for readers in general. She presents the ritual as a practical habit worth testing, not as a proven method.",
+        "The chapter ends with the example of a retired engineer named Tomas, who used the ritual to finish a history of bridges that he had abandoned three times. Tomas credited the written question with keeping him oriented whenever the book became dense."
+      ]
+    },
+    {
+      "title": "Chapter 3: Memory and the Testing Effect",
+      "paragraphs": [
+        "Reading a page twice feels productive, but the author argues that it mostly produces familiarity, not memory. Familiarity is the sense of having seen something before; memory is the ability to retrieve it when it is needed. The chapter claims that readers routinely confuse the two.",
+        "The central idea of the chapter is the testing effect: the finding that trying to recall information strengthens later memory more than reviewing the same information again. The author describes retrieval as effortful reconstruction, and she argues that the effort itself is what makes the memory durable.",
+        "To apply the testing effect, the author proposes closing the book at the end of each chapter and writing down the three most important ideas from memory before checking them. Mistakes during this exercise are useful, she says, because they reveal exactly which ideas need another look.",
+        "The chapter also introduces spacing. Reviews that are spread across several days lead to better retention than the same number of reviews packed into a single evening. The author recommends reviewing a chapter one day after reading it, then again after about a week.",
+        "The author warns against turning recall into a source of anxiety. Low-stakes self-testing works best when the reader treats errors as information rather than as failure, and she cautions that high-pressure testing can make some readers avoid reviewing altogether."
+      ]
+    },
+    {
+      "title": "Chapter 4: Reading With Limited Time",
+      "paragraphs": [
+        "The final chapter addresses readers who cannot find long, uninterrupted hours. The author rejects the idea that serious reading requires free afternoons. Instead she argues that consistency matters more than session length: twenty focused minutes every day accumulate into more understanding than an occasional three-hour session.",
+        "She describes a method she calls the reading ledger. After each session the reader records the page reached, the question the session tried to answer and one sentence summarising what was learned. The ledger makes it easy to resume after a gap, because the reader can recover the context in a minute instead of rereading several pages.",
+        "The author also discusses summaries. She argues that a good summary preserves the author's reasoning and not only the conclusions, and that summaries are most useful after a first reading, as a tool for review. She warns that relying only on summaries can leave a reader able to repeat claims without being able to defend them.",
+        "The book closes by returning to the switching tax from the first chapter. Limited time, the author writes, is not the main obstacle to reading well; fragmented time is. A reader with little time who protects it from interruption will usually learn more than a reader with plenty of time who spends it distracted."
+      ]
+    }
+  ]
+}
