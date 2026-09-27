@@ -34,9 +34,14 @@ SUMMARY_SCHEMA = _obj(
         },
         "definitions": {
             "type": "array",
-            "items": _obj({"term": {"type": "string"}, "definition": {"type": "string"}, "evidence_ids": IDS}),
+            "items": _obj(
+                {"term": {"type": "string"}, "definition": {"type": "string"}, "evidence_ids": IDS}
+            ),
         },
-        "examples": {"type": "array", "items": _obj({"description": {"type": "string"}, "evidence_ids": IDS})},
+        "examples": {
+            "type": "array",
+            "items": _obj({"description": {"type": "string"}, "evidence_ids": IDS}),
+        },
         "caveats": {"type": "array", "items": CLAIM},
         "connections": {"type": "array", "items": CLAIM},
         "conclusion": CLAIM,
@@ -52,7 +57,10 @@ NOTES_SCHEMA = _obj(
             "type": "array",
             "items": _obj(
                 {
-                    "kind": {"type": "string", "enum": ["argument", "reasoning", "example", "definition", "caveat", "conclusion"]},
+                    "kind": {
+                        "type": "string",
+                        "enum": ["argument", "reasoning", "example", "definition", "caveat", "conclusion"],
+                    },
                     "text": {"type": "string"},
                     "evidence_ids": IDS,
                 }
@@ -89,7 +97,9 @@ QUESTION_ITEM = _obj(
     }
 )
 
-QUIZ_SCHEMA = _obj({"questions": {"type": "array", "items": QUESTION_ITEM}, "language_ok": {"type": "boolean"}})
+QUIZ_SCHEMA = _obj(
+    {"questions": {"type": "array", "items": QUESTION_ITEM}, "language_ok": {"type": "boolean"}}
+)
 
 VALIDATOR_SCHEMA = _obj(
     {
@@ -113,10 +123,15 @@ EXPLAINER_SCHEMA = _obj(
 )
 
 CHAPTER_DETECTOR_SCHEMA = _obj(
-    {"chapter_start_indices": {"type": "array", "items": {"type": "integer"}}, "confidence": {"type": "string", "enum": ["high", "medium", "low"]}}
+    {
+        "chapter_start_indices": {"type": "array", "items": {"type": "integer"}},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+    }
 )
 
-REPAIR_SCHEMA = _obj({"repaired": {"type": "array", "items": _obj({"id": {"type": "string"}, "text": {"type": "string"}})}})
+REPAIR_SCHEMA = _obj(
+    {"repaired": {"type": "array", "items": _obj({"id": {"type": "string"}, "text": {"type": "string"}})}}
+)
 
 TRANSLATION_SCHEMA = _obj({"translation": {"type": "string"}, "language_ok": {"type": "boolean"}})
 

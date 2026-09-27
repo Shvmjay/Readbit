@@ -43,9 +43,13 @@ def normalize_email(email: str) -> str:
 
 def validate_password(password: str) -> None:
     if len(password) < 10 or len(password) > 200:
-        raise AppError(ErrorCode.VALIDATION_ERROR, "Passwords must be 10–200 characters long.", status_code=422)
+        raise AppError(
+            ErrorCode.VALIDATION_ERROR, "Passwords must be 10–200 characters long.", status_code=422
+        )
     if password.lower() == password and password.isalpha():
-        raise AppError(ErrorCode.VALIDATION_ERROR, "Use a mix of letters and numbers or symbols.", status_code=422)
+        raise AppError(
+            ErrorCode.VALIDATION_ERROR, "Use a mix of letters and numbers or symbols.", status_code=422
+        )
 
 
 # ---------------------------------------------------------------- guest sessions
@@ -79,8 +83,13 @@ def resolve_guest(db: Session, token: str | None) -> GuestSession | None:
 # ---------------------------------------------------------------- user sessions
 def create_session(db: Session, user: User) -> str:
     token = new_token()
-    db.add(AuthSession(user_id=user.id, token_hash=hash_token(token),
-                       expires_at=_now() + timedelta(hours=get_settings().session_ttl_hours)))
+    db.add(
+        AuthSession(
+            user_id=user.id,
+            token_hash=hash_token(token),
+            expires_at=_now() + timedelta(hours=get_settings().session_ttl_hours),
+        )
+    )
     db.commit()
     return token
 
@@ -105,19 +114,28 @@ def resolve_user(db: Session, token: str | None) -> tuple[User | None, AuthSessi
 def revoke_session(db: Session, token: str | None) -> None:
     if not token:
         return
-    db.execute(update(AuthSession).where(AuthSession.token_hash == hash_token(token)).values(revoked_at=_now()))
+    db.execute(
+        update(AuthSession).where(AuthSession.token_hash == hash_token(token)).values(revoked_at=_now())
+    )
     db.commit()
 
 
-def register(db: Session, email: str, password: str, display_name: str, language: str, guest: GuestSession | None) -> User:
+def register(
+    db: Session, email: str, password: str, display_name: str, language: str, guest: GuestSession | None
+) -> User:
     email = normalize_email(email)
     validate_password(password)
     if db.scalar(select(User).where(User.email == email)):
-        raise AppError(ErrorCode.CONFLICT, "An account with this email already exists. Try signing in.", status_code=409)
+        raise AppError(
+            ErrorCode.CONFLICT, "An account with this email already exists. Try signing in.", status_code=409
+        )
     user_id = uuid.uuid4()
     user = User(
-        id=user_id, email=email, display_name=display_name.strip()[:120] or email.split("@")[0],
-        authentication_subject=f"local:{user_id}", password_hash=hash_password(password),
+        id=user_id,
+        email=email,
+        display_name=display_name.strip()[:120] or email.split("@")[0],
+        authentication_subject=f"local:{user_id}",
+        password_hash=hash_password(password),
         preferred_language=language if language in SUPPORTED_LANGUAGES else "en",
     )
     db.add(user)
@@ -152,7 +170,11 @@ def migrate_guest(db: Session, guest: GuestSession, user: User) -> None:
     """Move a guest's books, notes and learning history into the account (guest → registered conversion)."""
     new_key = f"u:{user.id}"
     for model in (Book, Annotation, QuizSession):
-        db.execute(update(model).where(model.guest_session_id == guest.id).values(owner_user_id=user.id, guest_session_id=None))
+        db.execute(
+            update(model)
+            .where(model.guest_session_id == guest.id)
+            .values(owner_user_id=user.id, guest_session_id=None)
+        )
     for model in (ReadingState, TopicMastery, UserAchievement):
         # Skip rows that would collide with the user's existing rows (keep the account's own record).
         for row in db.scalars(select(model).where(model.guest_session_id == guest.id)):
@@ -162,7 +184,10 @@ def migrate_guest(db: Session, guest: GuestSession, user: User) -> None:
             elif model is TopicMastery:
                 clash_stmt = clash_stmt.where(TopicMastery.topic_id == row.topic_id)
             else:
-                clash_stmt = clash_stmt.where(UserAchievement.achievement_id == row.achievement_id, UserAchievement.scope_key == row.scope_key)
+                clash_stmt = clash_stmt.where(
+                    UserAchievement.achievement_id == row.achievement_id,
+                    UserAchievement.scope_key == row.scope_key,
+                )
             if db.scalar(clash_stmt) is not None:
                 db.delete(row)
                 continue
@@ -183,12 +208,20 @@ def request_password_reset(db: Session, email: str) -> str | None:
     if user is None:
         return None
     token = new_token()
-    db.add(PasswordResetToken(user_id=user.id, token_hash=hash_token(token),
-                              expires_at=_now() + timedelta(minutes=get_settings().password_reset_ttl_minutes)))
+    db.add(
+        PasswordResetToken(
+            user_id=user.id,
+            token_hash=hash_token(token),
+            expires_at=_now() + timedelta(minutes=get_settings().password_reset_ttl_minutes),
+        )
+    )
     db.commit()
     if get_settings().email_delivery == "log" and not get_settings().is_production:
         # Development delivery: the link is logged locally. Production must configure a real mail adapter.
-        log.info("password reset link", extra={"reset_url": f"{get_settings().app_url}/reset-password?token={token}"})
+        log.info(
+            "password reset link",
+            extra={"reset_url": f"{get_settings().app_url}/reset-password?token={token}"},
+        )
     return token
 
 
@@ -196,11 +229,17 @@ def reset_password(db: Session, token: str, new_password: str) -> None:
     validate_password(new_password)
     row = db.scalar(select(PasswordResetToken).where(PasswordResetToken.token_hash == hash_token(token)))
     if row is None or row.used_at is not None or _aware(row.expires_at) <= _now():
-        raise AppError(ErrorCode.SESSION_EXPIRED, "This reset link is invalid or has expired.", status_code=400)
+        raise AppError(
+            ErrorCode.SESSION_EXPIRED, "This reset link is invalid or has expired.", status_code=400
+        )
     user = db.get(User, row.user_id)
     assert user is not None
     user.password_hash = hash_password(new_password)
     row.used_at = _now()
     # Sign out everywhere after a password change.
-    db.execute(update(AuthSession).where(AuthSession.user_id == user.id, AuthSession.revoked_at.is_(None)).values(revoked_at=_now()))
+    db.execute(
+        update(AuthSession)
+        .where(AuthSession.user_id == user.id, AuthSession.revoked_at.is_(None))
+        .values(revoked_at=_now())
+    )
     db.commit()

@@ -35,15 +35,51 @@ RETRY_DELAY = timedelta(minutes=10)
 SLOW_RESPONSE_MS = 45_000
 
 ACHIEVEMENTS = [
-    ("first_book", "First book on the shelf", "Your first book finished processing.", "book", {"books_ready": 1}),
+    (
+        "first_book",
+        "First book on the shelf",
+        "Your first book finished processing.",
+        "book",
+        {"books_ready": 1},
+    ),
     ("first_summary", "Summary reader", "You opened your first summary.", "scroll", {"summaries_opened": 1}),
     ("first_lesson", "First lesson", "You completed your first lesson.", "sparkle", {"lessons_completed": 1}),
-    ("perfect_lesson", "Flawless", "You answered every question in a lesson correctly (3+ questions).", "star", {"lesson_accuracy": 1.0, "min_questions": 3}),
-    ("chapter_complete", "Chapter complete", "You completed a chapter's lessons with at least 60% accuracy.", "flag", {"chapter_accuracy": 0.6}),
-    ("ten_correct", "Ten right answers", "You answered ten questions correctly.", "target", {"correct_answers": 10}),
+    (
+        "perfect_lesson",
+        "Flawless",
+        "You answered every question in a lesson correctly (3+ questions).",
+        "star",
+        {"lesson_accuracy": 1.0, "min_questions": 3},
+    ),
+    (
+        "chapter_complete",
+        "Chapter complete",
+        "You completed a chapter's lessons with at least 60% accuracy.",
+        "flag",
+        {"chapter_accuracy": 0.6},
+    ),
+    (
+        "ten_correct",
+        "Ten right answers",
+        "You answered ten questions correctly.",
+        "target",
+        {"correct_answers": 10},
+    ),
     ("revision_done", "Comeback", "You completed a revision session.", "refresh", {"revision_sessions": 1}),
-    ("three_day_streak", "Three-day streak", "You practised on three consecutive days.", "flame", {"streak_days": 3}),
-    ("book_mastered", "Book complete", "You completed the lessons for every chapter of a book.", "trophy", {"all_chapters": True}),
+    (
+        "three_day_streak",
+        "Three-day streak",
+        "You practised on three consecutive days.",
+        "flame",
+        {"streak_days": 3},
+    ),
+    (
+        "book_mastered",
+        "Book complete",
+        "You completed the lessons for every chapter of a book.",
+        "trophy",
+        {"all_chapters": True},
+    ),
 ]
 
 
@@ -69,15 +105,21 @@ def _aware(dt: datetime | None) -> datetime | None:
 
 
 def get_mastery(db: Session, actor: CurrentActor, topic_id: uuid.UUID) -> TopicMastery | None:
-    return db.scalar(select(TopicMastery).where(TopicMastery.topic_id == topic_id, TopicMastery.actor_key == actor.key))
+    return db.scalar(
+        select(TopicMastery).where(TopicMastery.topic_id == topic_id, TopicMastery.actor_key == actor.key)
+    )
 
 
-def update_mastery(db: Session, actor: CurrentActor, question: Question, correct: bool) -> TopicMastery | None:
+def update_mastery(
+    db: Session, actor: CurrentActor, question: Question, correct: bool
+) -> TopicMastery | None:
     if question.topic_id is None:
         return None
     m = get_mastery(db, actor, question.topic_id)
     if m is None:
-        m = TopicMastery(actor_key=actor.key, book_id=question.book_id, topic_id=question.topic_id, **actor.owner_fields())
+        m = TopicMastery(
+            actor_key=actor.key, book_id=question.book_id, topic_id=question.topic_id, **actor.owner_fields()
+        )
         db.add(m)
     outcome = DIFFICULTY_CREDIT.get(question.difficulty, 1.0) if correct else 0.0
     prev = m.mastery_score or 0.0
@@ -88,7 +130,9 @@ def update_mastery(db: Session, actor: CurrentActor, question: Question, correct
     now = _now()
     m.last_practiced_at = now
     if correct:
-        m.review_interval_days = 1.0 if not m.review_interval_days else round(m.review_interval_days * REVIEW_GROWTH, 2)
+        m.review_interval_days = (
+            1.0 if not m.review_interval_days else round(m.review_interval_days * REVIEW_GROWTH, 2)
+        )
         m.next_review_at = now + timedelta(days=m.review_interval_days)
     else:
         m.review_interval_days = 0.0
@@ -112,8 +156,12 @@ def next_difficulty(current: int, recent: list[bool], durations: list[int | None
     return current
 
 
-def initial_difficulty(db: Session, actor: CurrentActor, book_id: uuid.UUID, chapter_id: uuid.UUID | None) -> int:
-    stmt = select(func.avg(TopicMastery.mastery_score)).where(TopicMastery.actor_key == actor.key, TopicMastery.book_id == book_id)
+def initial_difficulty(
+    db: Session, actor: CurrentActor, book_id: uuid.UUID, chapter_id: uuid.UUID | None
+) -> int:
+    stmt = select(func.avg(TopicMastery.mastery_score)).where(
+        TopicMastery.actor_key == actor.key, TopicMastery.book_id == book_id
+    )
     if chapter_id is not None:
         stmt = stmt.join(Topic, Topic.id == TopicMastery.topic_id).where(Topic.chapter_id == chapter_id)
     avg = db.scalar(stmt)
@@ -125,7 +173,9 @@ def initial_difficulty(db: Session, actor: CurrentActor, book_id: uuid.UUID, cha
 def is_weak(m: TopicMastery, now: datetime | None = None) -> bool:
     now = now or _now()
     due = _aware(m.next_review_at)
-    return m.attempts_count > 0 and (m.mastery_score < WEAK_THRESHOLD or (due is not None and due <= now and m.mastery_score < 0.85))
+    return m.attempts_count > 0 and (
+        m.mastery_score < WEAK_THRESHOLD or (due is not None and due <= now and m.mastery_score < 0.85)
+    )
 
 
 def actor_sessions(db: Session, actor: CurrentActor, book_id: uuid.UUID | None = None):
@@ -137,7 +187,10 @@ def actor_sessions(db: Session, actor: CurrentActor, book_id: uuid.UUID | None =
 
 def chapter_stats(db: Session, actor: CurrentActor, book: Book) -> dict[uuid.UUID, dict]:
     chapters = list(db.scalars(select(Chapter).where(Chapter.book_id == book.id).order_by(Chapter.ordinal)))
-    stats = {ch.id: {"answered": 0, "correct": 0, "lessons_completed": 0, "completed": False, "best_accuracy": 0.0} for ch in chapters}
+    stats = {
+        ch.id: {"answered": 0, "correct": 0, "lessons_completed": 0, "completed": False, "best_accuracy": 0.0}
+        for ch in chapters
+    }
     sessions = list(db.scalars(actor_sessions(db, actor, book.id)))
     for s in sessions:
         if s.chapter_id in stats and s.session_type == "lesson":
@@ -150,9 +203,13 @@ def chapter_stats(db: Session, actor: CurrentActor, book: Book) -> dict[uuid.UUI
                 st["best_accuracy"] = max(st["best_accuracy"], acc)
                 if acc >= CHAPTER_COMPLETE_ACCURACY:
                     st["completed"] = True
-    counts = dict(db.execute(
-        select(Question.chapter_id, func.count()).where(Question.book_id == book.id, Question.validation_status == "approved").group_by(Question.chapter_id)
-    ).all())
+    counts = dict(
+        db.execute(
+            select(Question.chapter_id, func.count())
+            .where(Question.book_id == book.id, Question.validation_status == "approved")
+            .group_by(Question.chapter_id)
+        ).all()
+    )
     for cid, st in stats.items():
         st["approved_questions"] = int(counts.get(cid, 0))
     return stats
@@ -160,7 +217,9 @@ def chapter_stats(db: Session, actor: CurrentActor, book: Book) -> dict[uuid.UUI
 
 def streak_days(db: Session, actor: CurrentActor) -> int:
     rows = db.scalars(
-        select(QuestionAttempt.answered_at).join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id).where(actor.owns(QuizSession))
+        select(QuestionAttempt.answered_at)
+        .join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id)
+        .where(actor.owns(QuizSession))
     ).all()
     days = {(_aware(r) or _now()).date() for r in rows}
     if not days:
@@ -176,10 +235,15 @@ def streak_days(db: Session, actor: CurrentActor) -> int:
 
 def answered_today(db: Session, actor: CurrentActor) -> int:
     start = datetime.combine(date.today(), datetime.min.time(), tzinfo=UTC)
-    return int(db.scalar(
-        select(func.count()).select_from(QuestionAttempt).join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id)
-        .where(actor.owns(QuizSession), QuestionAttempt.answered_at >= start)
-    ) or 0)
+    return int(
+        db.scalar(
+            select(func.count())
+            .select_from(QuestionAttempt)
+            .join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id)
+            .where(actor.owns(QuizSession), QuestionAttempt.answered_at >= start)
+        )
+        or 0
+    )
 
 
 def _award(db: Session, actor: CurrentActor, code: str, book_id: uuid.UUID | None = None) -> dict | None:
@@ -187,16 +251,32 @@ def _award(db: Session, actor: CurrentActor, code: str, book_id: uuid.UUID | Non
     if ach is None:
         return None
     scope = str(book_id) if book_id and code in ("chapter_complete", "book_mastered") else "global"
-    exists = db.scalar(select(UserAchievement).where(UserAchievement.achievement_id == ach.id, UserAchievement.actor_key == actor.key, UserAchievement.scope_key == scope))
+    exists = db.scalar(
+        select(UserAchievement).where(
+            UserAchievement.achievement_id == ach.id,
+            UserAchievement.actor_key == actor.key,
+            UserAchievement.scope_key == scope,
+        )
+    )
     if exists:
         return None
-    db.add(UserAchievement(achievement_id=ach.id, actor_key=actor.key, scope_key=scope, book_id=book_id if scope != "global" else None, **actor.owner_fields()))
+    db.add(
+        UserAchievement(
+            achievement_id=ach.id,
+            actor_key=actor.key,
+            scope_key=scope,
+            book_id=book_id if scope != "global" else None,
+            **actor.owner_fields(),
+        )
+    )
     db.flush()
     track(db, "achievement_earned", actor.key, book_id, achievement=code)
     return {"code": ach.code, "name": ach.name, "description": ach.description, "icon_key": ach.icon_key}
 
 
-def evaluate_achievements(db: Session, actor: CurrentActor, book: Book | None = None, session: QuizSession | None = None) -> list[dict]:
+def evaluate_achievements(
+    db: Session, actor: CurrentActor, book: Book | None = None, session: QuizSession | None = None
+) -> list[dict]:
     earned: list[dict] = []
 
     def add(code: str, book_id=None):
@@ -204,15 +284,29 @@ def evaluate_achievements(db: Session, actor: CurrentActor, book: Book | None = 
         if r:
             earned.append(r)
 
-    if db.scalar(select(func.count()).select_from(Book).where(actor.owns(Book), Book.processing_status == "ready", Book.deleted_at.is_(None))):
+    if db.scalar(
+        select(func.count())
+        .select_from(Book)
+        .where(actor.owns(Book), Book.processing_status == "ready", Book.deleted_at.is_(None))
+    ):
         add("first_book")
-    if db.scalar(select(func.count()).select_from(ReadingState).where(ReadingState.actor_key == actor.key, ReadingState.last_view == "summary")):
+    if db.scalar(
+        select(func.count())
+        .select_from(ReadingState)
+        .where(ReadingState.actor_key == actor.key, ReadingState.last_view == "summary")
+    ):
         add("first_summary")
     sessions = list(db.scalars(actor_sessions(db, actor)))
     completed = [s for s in sessions if s.status == "completed"]
     if any(s.session_type == "lesson" for s in completed):
         add("first_lesson")
-    if session is not None and session.status == "completed" and session.answered_count >= 3 and session.correct_count == session.answered_count and session.session_type == "lesson":
+    if (
+        session is not None
+        and session.status == "completed"
+        and session.answered_count >= 3
+        and session.correct_count == session.answered_count
+        and session.session_type == "lesson"
+    ):
         add("perfect_lesson")
     if any(s.session_type == "revision" for s in completed):
         add("revision_done")

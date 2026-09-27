@@ -42,7 +42,9 @@ async def lifespan(_: FastAPI):
 
 
 def _error(code: ErrorCode, message: str, status: int, details: dict | None = None) -> JSONResponse:
-    return JSONResponse(AppError(code, message, status_code=status, details=details).to_dict(), status_code=status)
+    return JSONResponse(
+        AppError(code, message, status_code=status, details=details).to_dict(), status_code=status
+    )
 
 
 def create_app() -> FastAPI:
@@ -65,7 +67,9 @@ def create_app() -> FastAPI:
         allow_headers=["Content-Type", "X-Readbit-CSRF", "X-Request-ID"],
     )
 
-    allowed_origins = {o.rstrip("/") for o in settings.cors_origin_list + [settings.app_url, settings.api_url]}
+    allowed_origins = {
+        o.rstrip("/") for o in settings.cors_origin_list + [settings.app_url, settings.api_url]
+    }
 
     @app.middleware("http")
     async def security_middleware(request: Request, call_next):
@@ -95,8 +99,15 @@ def create_app() -> FastAPI:
         if settings.is_production:
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
         if request.url.path.startswith("/api/"):
-            log.info("request", extra={"method": request.method, "path": request.url.path, "status": response.status_code,
-                                       "ms": int((time.monotonic() - started) * 1000)})
+            log.info(
+                "request",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status": response.status_code,
+                    "ms": int((time.monotonic() - started) * 1000),
+                },
+            )
         return response
 
     @app.exception_handler(AppError)
@@ -105,7 +116,10 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(_: Request, exc: RequestValidationError):
-        fields = [{"field": ".".join(str(p) for p in e.get("loc", [])[1:]), "message": e.get("msg", "")} for e in exc.errors()]
+        fields = [
+            {"field": ".".join(str(p) for p in e.get("loc", [])[1:]), "message": e.get("msg", "")}
+            for e in exc.errors()
+        ]
         return _error(ErrorCode.VALIDATION_ERROR, "Some fields are invalid.", 422, {"fields": fields})
 
     @app.exception_handler(StarletteHTTPException)
@@ -116,9 +130,20 @@ def create_app() -> FastAPI:
     @app.exception_handler(Exception)
     async def unhandled(_: Request, exc: Exception):
         log.exception("unhandled error")
-        return _error(ErrorCode.INTERNAL, "Something went wrong on our side. Your data is safe; please retry.", 500)
+        return _error(
+            ErrorCode.INTERNAL, "Something went wrong on our side. Your data is safe; please retry.", 500
+        )
 
-    for r in (health.router, auth.router, me.router, books.router, summaries.router, annotations.router, quiz.router, events.router):
+    for r in (
+        health.router,
+        auth.router,
+        me.router,
+        books.router,
+        summaries.router,
+        annotations.router,
+        quiz.router,
+        events.router,
+    ):
         app.include_router(r)
     return app
 

@@ -14,10 +14,18 @@ def serialize_job(job: ProcessingJob | None) -> dict | None:
     if job is None:
         return None
     return {
-        "id": str(job.id), "job_type": job.job_type, "status": job.status, "stage": job.stage,
-        "progress_percent": job.progress_percent, "attempts": job.attempts,
-        "error": {"code": job.error_code, "message": job.safe_error_message} if job.status == "failed" else None,
-        "started_at": iso(job.started_at), "completed_at": iso(job.completed_at), "updated_at": iso(job.updated_at),
+        "id": str(job.id),
+        "job_type": job.job_type,
+        "status": job.status,
+        "stage": job.stage,
+        "progress_percent": job.progress_percent,
+        "attempts": job.attempts,
+        "error": {"code": job.error_code, "message": job.safe_error_message}
+        if job.status == "failed"
+        else None,
+        "started_at": iso(job.started_at),
+        "completed_at": iso(job.completed_at),
+        "updated_at": iso(job.updated_at),
     }
 
 
@@ -50,17 +58,26 @@ def serialize_book(book: Book, job: ProcessingJob | None = None) -> dict:
 
 def serialize_chapter(ch: Chapter) -> dict:
     return {
-        "id": str(ch.id), "ordinal": ch.ordinal, "title": ch.title, "detection_method": ch.detection_method,
-        "detection_confidence": ch.detection_confidence, "word_count": ch.word_count,
+        "id": str(ch.id),
+        "ordinal": ch.ordinal,
+        "title": ch.title,
+        "detection_method": ch.detection_method,
+        "detection_confidence": ch.detection_confidence,
+        "word_count": ch.word_count,
         "estimated_reading_minutes": max(1, round(ch.word_count / 230)) if ch.word_count else None,
-        "start_location": ch.start_location, "end_location": ch.end_location,
+        "start_location": ch.start_location,
+        "end_location": ch.end_location,
     }
 
 
 def serialize_user(user: User) -> dict:
     return {
-        "id": str(user.id), "email": user.email, "display_name": user.display_name,
-        "preferred_language": user.preferred_language, "content_language": user.content_language,
-        "theme_preference": user.theme_preference, "daily_goal_questions": user.daily_goal_questions,
+        "id": str(user.id),
+        "email": user.email,
+        "display_name": user.display_name,
+        "preferred_language": user.preferred_language,
+        "content_language": user.content_language,
+        "theme_preference": user.theme_preference,
+        "daily_goal_questions": user.daily_goal_questions,
         "created_at": iso(user.created_at),
     }

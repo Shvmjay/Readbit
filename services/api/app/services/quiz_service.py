@@ -87,7 +87,13 @@ def fingerprint(question_text: str, correct_text: str) -> str:
 
 # ---------------------------------------------------------------- generation
 def _chapter_passages(db: Session, chapter: Chapter, round_index: int) -> list[DocumentChunk]:
-    chunks = list(db.scalars(select(DocumentChunk).where(DocumentChunk.chapter_id == chapter.id).order_by(DocumentChunk.ordinal)))
+    chunks = list(
+        db.scalars(
+            select(DocumentChunk)
+            .where(DocumentChunk.chapter_id == chapter.id)
+            .order_by(DocumentChunk.ordinal)
+        )
+    )
     budget, window, used = 7000, [], 0
     if sum(c.token_count for c in chunks) <= budget:
         return chunks
@@ -133,23 +139,46 @@ def generate_questions(
         return {"approved": 0, "rejected": 0}
     passages, rendered = render_passages(db, chunks)
     allowed = {passage_id(c): c for c in chunks}
-    existing = list(db.scalars(select(Question).where(Question.book_id == book.id, Question.validation_status == "approved")))
+    existing = list(
+        db.scalars(
+            select(Question).where(Question.book_id == book.id, Question.validation_status == "approved")
+        )
+    )
     chapter_existing = [q for q in existing if q.chapter_id == chapter.id]
     avoid = [q.question_text for q in chapter_existing][-40:]
-    other_text = [c.text_content for c in db.scalars(
-        select(DocumentChunk).where(DocumentChunk.book_id == book.id, DocumentChunk.chapter_id != chapter.id).limit(60))]
+    other_text = [
+        c.text_content
+        for c in db.scalars(
+            select(DocumentChunk)
+            .where(DocumentChunk.book_id == book.id, DocumentChunk.chapter_id != chapter.id)
+            .limit(60)
+        )
+    ]
     book_terms = _key_terms(other_text, 12) if other_text else []
     types = OFFLINE_TYPES if router.is_offline else ALL_TYPES
     result = router.generate(
         "quiz_question_generator",
         variables={
-            "book_title": book.title, "chapter_title": chapter.title, "passages": rendered, "count": count + 2,
-            "types": ", ".join(types), "difficulties": "a mix of 1, 2 and 3",
+            "book_title": book.title,
+            "chapter_title": chapter.title,
+            "passages": rendered,
+            "count": count + 2,
+            "types": ", ".join(types),
+            "difficulties": "a mix of 1, 2 and 3",
             "avoid": "\n".join(f"- {t}" for t in avoid) or "(none)",
         },
-        context={"passages": passages, "count": count + 2, "chapter_title": _short_title(chapter), "avoid": avoid,
-                 "book_terms": book_terms, "seed": seed, "source_language": book.detected_language},
-        output_language=lang, source_language=book.detected_language, book_id=book.id,
+        context={
+            "passages": passages,
+            "count": count + 2,
+            "chapter_title": _short_title(chapter),
+            "avoid": avoid,
+            "book_terms": book_terms,
+            "seed": seed,
+            "source_language": book.detected_language,
+        },
+        output_language=lang,
+        source_language=book.detected_language,
+        book_id=book.id,
     )
     embedder = get_embedder()
     existing_vecs = [(q.embedding, q) for q in chapter_existing if q.embedding]
@@ -166,14 +195,24 @@ def generate_questions(
         if problems:
             status = "rejected"
         else:
-            blind = {"question": cand["question"], "options": cand["options"], "explanation": cand["explanation"]}
+            blind = {
+                "question": cand["question"],
+                "options": cand["options"],
+                "explanation": cand["explanation"],
+            }
             v = router.generate(
                 "quiz_question_validator",
                 variables={"passages": rendered, "question": _render_question(blind)},
                 context={"question": blind, "passages": passages},
-                output_language=lang, source_language=book.detected_language, book_id=book.id,
+                output_language=lang,
+                source_language=book.detected_language,
+                book_id=book.id,
             ).data
-            report["semantic"] = {"validator_key": v["answer_key"], "checks": v["checks"], "reason": v["reason"]}
+            report["semantic"] = {
+                "validator_key": v["answer_key"],
+                "checks": v["checks"],
+                "reason": v["reason"],
+            }
             checks = dict(v["checks"])
             if v["answer_key"] != cand["correct_key"]:
                 status = "rejected"
@@ -186,7 +225,9 @@ def generate_questions(
                     "answer_explainer",
                     variables={"passages": rendered, "question": _render_question(cand, include_key=True)},
                     context={"question": cand, "passages": passages},
-                    output_language=lang, source_language=book.detected_language, book_id=book.id,
+                    output_language=lang,
+                    source_language=book.detected_language,
+                    book_id=book.id,
                 ).data
                 if fixed["explanation"].strip():
                     cand["explanation"] = fixed["explanation"]
@@ -195,7 +236,9 @@ def generate_questions(
                 else:
                     status = "rejected"
                     report["semantic"]["decision"] = "explanation_unsupported"
-        correct_text = next((o["text"] for o in cand.get("options", []) if o.get("key") == cand.get("correct_key")), "")
+        correct_text = next(
+            (o["text"] for o in cand.get("options", []) if o.get("key") == cand.get("correct_key")), ""
+        )
         norm = normalize_for_match(cand.get("question", "") + " || " + correct_text)
         fp = fingerprint(cand.get("question", ""), correct_text)
         vec = embedder.embed([cand.get("question", "") + " " + correct_text])[0]
@@ -208,9 +251,14 @@ def generate_questions(
             else:
                 for other_vec, other in existing_vecs:
                     sim = cosine(vec, other_vec)
-                    other_correct = next((o["text"] for o in other.options_json if o["key"] == other.correct_option_key), "")
+                    other_correct = next(
+                        (o["text"] for o in other.options_json if o["key"] == other.correct_option_key), ""
+                    )
                     same_answer = normalize_for_match(other_correct) == normalize_for_match(correct_text)
-                    same_evidence = bool(set(cand["evidence_ids"][:1]) & set(other.validation_report.get("passage_ids", [])[:1]))
+                    same_evidence = bool(
+                        set(cand["evidence_ids"][:1])
+                        & set(other.validation_report.get("passage_ids", [])[:1])
+                    )
                     if sim >= settings.dedup_similarity_threshold:
                         dup_reason = f"semantic_similarity:{sim:.2f}"
                         break
@@ -233,16 +281,30 @@ def generate_questions(
             log.info("question rejected before persistence", extra={"problems": problems})
             continue
         q = Question(
-            book_id=book.id, chapter_id=chapter.id, topic_id=topic.id if topic else None,
+            book_id=book.id,
+            chapter_id=chapter.id,
+            topic_id=topic.id if topic else None,
             question_text=cand["question"].strip(),
             question_type=cand.get("question_type") if cand.get("question_type") in ALL_TYPES else "recall",
             difficulty=int(cand.get("difficulty", 2)) if cand.get("difficulty") in (1, 2, 3) else 2,
-            options_json=[{"key": o["key"], "text": o["text"].strip()} for o in sorted(cand["options"], key=lambda o: o["key"])],
-            correct_option_key=cand["correct_key"], explanation=cand.get("explanation", "").strip(),
-            misconception=(cand.get("misconception") or "").strip() or None, evidence_ids=ev_ids, language=lang,
-            generation_method=method, validation_status=status, validation_report=report,
-            semantic_fingerprint=fp, normalized_text=norm, embedding=vec, prompt_version=result.prompt_version,
-            model_provider=result.provider, model_name=result.model,
+            options_json=[
+                {"key": o["key"], "text": o["text"].strip()}
+                for o in sorted(cand["options"], key=lambda o: o["key"])
+            ],
+            correct_option_key=cand["correct_key"],
+            explanation=cand.get("explanation", "").strip(),
+            misconception=(cand.get("misconception") or "").strip() or None,
+            evidence_ids=ev_ids,
+            language=lang,
+            generation_method=method,
+            validation_status=status,
+            validation_report=report,
+            semantic_fingerprint=fp,
+            normalized_text=norm,
+            embedding=vec,
+            prompt_version=result.prompt_version,
+            model_provider=result.provider,
+            model_name=result.model,
         )
         db.add(q)
         db.flush()
@@ -273,13 +335,25 @@ def _render_question(q: dict, include_key: bool = False) -> str:
     return "\n".join(lines)
 
 
-def request_question_bank(db: Session, book: Book, chapter: Chapter, *, needed: int, method: str) -> ProcessingJob:
-    running = db.scalar(select(ProcessingJob).where(
-        ProcessingJob.book_id == book.id, ProcessingJob.job_type == "question_bank", ProcessingJob.target_id == chapter.id,
-        ProcessingJob.status.in_(("queued", "running"))))
+def request_question_bank(
+    db: Session, book: Book, chapter: Chapter, *, needed: int, method: str
+) -> ProcessingJob:
+    running = db.scalar(
+        select(ProcessingJob).where(
+            ProcessingJob.book_id == book.id,
+            ProcessingJob.job_type == "question_bank",
+            ProcessingJob.target_id == chapter.id,
+            ProcessingJob.status.in_(("queued", "running")),
+        )
+    )
     if running is not None:
         return running
-    job = ProcessingJob(book_id=book.id, job_type="question_bank", target_id=chapter.id, params={"needed": needed, "method": method})
+    job = ProcessingJob(
+        book_id=book.id,
+        job_type="question_bank",
+        target_id=chapter.id,
+        params={"needed": needed, "method": method},
+    )
     db.add(job)
     if book.learning_status in ("not_started", "learning_ready", "learning_failed"):
         learning_transition(book, "generating_questions")
@@ -299,7 +373,12 @@ def run_question_bank_job(job_id: uuid.UUID) -> None:
             job.status = "cancelled"
             db.commit()
             return
-        job.status, job.attempts, job.started_at, job.stage = "running", job.attempts + 1, datetime.now(UTC), "generating_questions"
+        job.status, job.attempts, job.started_at, job.stage = (
+            "running",
+            job.attempts + 1,
+            datetime.now(UTC),
+            "generating_questions",
+        )
         db.commit()
         needed = int((job.params or {}).get("needed", BANK_TARGET_PER_CHAPTER))
         method = (job.params or {}).get("method", "bank")
@@ -308,8 +387,15 @@ def run_question_bank_job(job_id: uuid.UUID) -> None:
             for rnd in range(MAX_ROUNDS):
                 if totals["approved"] >= needed:
                     break
-                r = generate_questions(db, book, chapter, count=needed - totals["approved"], method=method,
-                                       seed=job.attempts * 101 + rnd, round_index=rnd)
+                r = generate_questions(
+                    db,
+                    book,
+                    chapter,
+                    count=needed - totals["approved"],
+                    method=method,
+                    seed=job.attempts * 101 + rnd,
+                    round_index=rnd,
+                )
                 totals["approved"] += r["approved"]
                 totals["rejected"] += r["rejected"]
                 job.stage = "validating_questions"
@@ -343,16 +429,26 @@ def run_question_bank_job(job_id: uuid.UUID) -> None:
 
 # ---------------------------------------------------------------- sessions
 def _answered_question_ids(db: Session, actor: CurrentActor, book_id: uuid.UUID) -> set[uuid.UUID]:
-    return set(db.scalars(
-        select(QuestionAttempt.question_id).join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id)
-        .where(actor.owns(QuizSession), QuizSession.book_id == book_id)
-    ))
+    return set(
+        db.scalars(
+            select(QuestionAttempt.question_id)
+            .join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id)
+            .where(actor.owns(QuizSession), QuizSession.book_id == book_id)
+        )
+    )
 
 
 def _unused_count(db: Session, actor: CurrentActor, book: Book, chapter: Chapter) -> int:
     answered = _answered_question_ids(db, actor, book.id)
-    ids = set(db.scalars(select(Question.id).where(Question.chapter_id == chapter.id, Question.validation_status == "approved",
-                                                   Question.language == book_output_language(book))))
+    ids = set(
+        db.scalars(
+            select(Question.id).where(
+                Question.chapter_id == chapter.id,
+                Question.validation_status == "approved",
+                Question.language == book_output_language(book),
+            )
+        )
+    )
     return len(ids - answered)
 
 
@@ -362,16 +458,23 @@ def start_lesson(db: Session, actor: CurrentActor, book: Book, chapter_id: uuid.
     chapters = list(db.scalars(select(Chapter).where(Chapter.book_id == book.id).order_by(Chapter.ordinal)))
     if chapter_id is None:
         stats = ls.chapter_stats(db, actor, book)
-        chapter = next((c for c in chapters if not stats[c.id]["completed"]), chapters[0] if chapters else None)
+        chapter = next(
+            (c for c in chapters if not stats[c.id]["completed"]), chapters[0] if chapters else None
+        )
     else:
         chapter = next((c for c in chapters if c.id == chapter_id), None)
     if chapter is None:
         raise AppError(ErrorCode.NOT_FOUND, "Chapter not found.", status_code=404)
     size = get_settings().lesson_size
     session = QuizSession(
-        book_id=book.id, chapter_id=chapter.id, session_type="lesson", status="preparing",
-        difficulty=ls.initial_difficulty(db, actor, book.id, chapter.id), language=book_output_language(book),
-        question_count=size, **actor.owner_fields(),
+        book_id=book.id,
+        chapter_id=chapter.id,
+        session_type="lesson",
+        status="preparing",
+        difficulty=ls.initial_difficulty(db, actor, book.id, chapter.id),
+        language=book_output_language(book),
+        question_count=size,
+        **actor.owner_fields(),
     )
     db.add(session)
     db.flush()
@@ -379,7 +482,11 @@ def start_lesson(db: Session, actor: CurrentActor, book: Book, chapter_id: uuid.
     if unused >= size:
         session.status = "active"
     else:
-        has_bank = db.scalar(select(func.count()).select_from(Question).where(Question.chapter_id == chapter.id, Question.validation_status == "approved"))
+        has_bank = db.scalar(
+            select(func.count())
+            .select_from(Question)
+            .where(Question.chapter_id == chapter.id, Question.validation_status == "approved")
+        )
         method = "dynamic" if has_bank else "bank"
         needed = BANK_TARGET_PER_CHAPTER if method == "bank" else max(size, size - unused + 2)
         request_question_bank(db, book, chapter, needed=needed, method=method)
@@ -391,12 +498,21 @@ def start_lesson(db: Session, actor: CurrentActor, book: Book, chapter_id: uuid.
 def start_revision(db: Session, actor: CurrentActor, book: Book) -> QuizSession:
     candidates = _revision_candidates(db, actor, book, exclude=set())
     if not candidates:
-        raise AppError(ErrorCode.CONFLICT, "Nothing to revise yet: answer some questions first, and weak concepts will appear here.", status_code=409)
+        raise AppError(
+            ErrorCode.CONFLICT,
+            "Nothing to revise yet: answer some questions first, and weak concepts will appear here.",
+            status_code=409,
+        )
     size = get_settings().lesson_size
     session = QuizSession(
-        book_id=book.id, chapter_id=None, session_type="revision", status="active",
-        difficulty=ls.initial_difficulty(db, actor, book.id, None), language=book_output_language(book),
-        question_count=min(size, len(candidates)), **actor.owner_fields(),
+        book_id=book.id,
+        chapter_id=None,
+        session_type="revision",
+        status="active",
+        difficulty=ls.initial_difficulty(db, actor, book.id, None),
+        language=book_output_language(book),
+        question_count=min(size, len(candidates)),
+        **actor.owner_fields(),
     )
     db.add(session)
     track(db, "revision_session_started", actor.key, book.id, session_type="revision")
@@ -404,20 +520,44 @@ def start_revision(db: Session, actor: CurrentActor, book: Book) -> QuizSession:
     return session
 
 
-def _revision_candidates(db: Session, actor: CurrentActor, book: Book, exclude: set[uuid.UUID]) -> list[Question]:
+def _revision_candidates(
+    db: Session, actor: CurrentActor, book: Book, exclude: set[uuid.UUID]
+) -> list[Question]:
     now = datetime.now(UTC)
-    weak_topics = [m.topic_id for m in db.scalars(select(TopicMastery).where(TopicMastery.actor_key == actor.key, TopicMastery.book_id == book.id))
-                   if ls.is_weak(m, now)]
+    weak_topics = [
+        m.topic_id
+        for m in db.scalars(
+            select(TopicMastery).where(TopicMastery.actor_key == actor.key, TopicMastery.book_id == book.id)
+        )
+        if ls.is_weak(m, now)
+    ]
     if not weak_topics:
         return []
     answered = _answered_question_ids(db, actor, book.id)
-    qs = list(db.scalars(select(Question).where(Question.topic_id.in_(weak_topics), Question.validation_status == "approved")))
+    qs = list(
+        db.scalars(
+            select(Question).where(
+                Question.topic_id.in_(weak_topics), Question.validation_status == "approved"
+            )
+        )
+    )
     # Revision explicitly allows reuse; prefer questions the reader got wrong, then any from weak topics.
-    wrong = set(db.scalars(
-        select(QuestionAttempt.question_id).join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id)
-        .where(actor.owns(QuizSession), QuizSession.book_id == book.id, QuestionAttempt.is_correct.is_(False))
-    ))
-    qs.sort(key=lambda q: (q.id not in wrong, q.id not in answered, hashlib.md5(str(q.id).encode()).hexdigest()))  # noqa: S324
+    wrong = set(
+        db.scalars(
+            select(QuestionAttempt.question_id)
+            .join(QuizSession, QuizSession.id == QuestionAttempt.quiz_session_id)
+            .where(
+                actor.owns(QuizSession), QuizSession.book_id == book.id, QuestionAttempt.is_correct.is_(False)
+            )
+        )
+    )
+    qs.sort(
+        key=lambda q: (
+            q.id not in wrong,
+            q.id not in answered,
+            hashlib.sha256(str(q.id).encode()).hexdigest(),
+        )
+    )
     return [q for q in qs if q.id not in exclude]
 
 
@@ -427,8 +567,11 @@ def refresh_session(db: Session, actor: CurrentActor, session: QuizSession) -> Q
         return session
     book = db.get(Book, session.book_id)
     chapter = db.get(Chapter, session.chapter_id)
-    job = db.scalar(select(ProcessingJob).where(ProcessingJob.job_type == "question_bank", ProcessingJob.target_id == session.chapter_id)
-                    .order_by(ProcessingJob.created_at.desc()))
+    job = db.scalar(
+        select(ProcessingJob)
+        .where(ProcessingJob.job_type == "question_bank", ProcessingJob.target_id == session.chapter_id)
+        .order_by(ProcessingJob.created_at.desc())
+    )
     unused = _unused_count(db, actor, book, chapter)
     size = get_settings().lesson_size
     if unused >= size or (job is not None and job.status in ("succeeded", "failed", "cancelled")):
@@ -447,11 +590,23 @@ def refresh_session(db: Session, actor: CurrentActor, session: QuizSession) -> Q
 
 
 def _served(db: Session, session: QuizSession) -> list[SessionQuestion]:
-    return list(db.scalars(select(SessionQuestion).where(SessionQuestion.quiz_session_id == session.id).order_by(SessionQuestion.position)))
+    return list(
+        db.scalars(
+            select(SessionQuestion)
+            .where(SessionQuestion.quiz_session_id == session.id)
+            .order_by(SessionQuestion.position)
+        )
+    )
 
 
 def _attempts(db: Session, session: QuizSession) -> list[QuestionAttempt]:
-    return list(db.scalars(select(QuestionAttempt).where(QuestionAttempt.quiz_session_id == session.id).order_by(QuestionAttempt.answered_at)))
+    return list(
+        db.scalars(
+            select(QuestionAttempt)
+            .where(QuestionAttempt.quiz_session_id == session.id)
+            .order_by(QuestionAttempt.answered_at)
+        )
+    )
 
 
 def current_question(db: Session, actor: CurrentActor, session: QuizSession) -> Question | None:
@@ -470,14 +625,30 @@ def current_question(db: Session, actor: CurrentActor, session: QuizSession) -> 
         pool = _revision_candidates(db, actor, book, exclude=served_ids)
     else:
         seen = _answered_question_ids(db, actor, session.book_id) | served_ids
-        pool = [q for q in db.scalars(select(Question).where(Question.chapter_id == session.chapter_id, Question.validation_status == "approved",
-                                                             Question.language == session.language)) if q.id not in seen]
+        pool = [
+            q
+            for q in db.scalars(
+                select(Question).where(
+                    Question.chapter_id == session.chapter_id,
+                    Question.validation_status == "approved",
+                    Question.language == session.language,
+                )
+            )
+            if q.id not in seen
+        ]
     if not pool:
         session.question_count = session.answered_count
         _complete(db, actor, session)
         db.commit()
         return None
-    mastery = {m.topic_id: m.mastery_score for m in db.scalars(select(TopicMastery).where(TopicMastery.actor_key == actor.key, TopicMastery.book_id == session.book_id))}
+    mastery = {
+        m.topic_id: m.mastery_score
+        for m in db.scalars(
+            select(TopicMastery).where(
+                TopicMastery.actor_key == actor.key, TopicMastery.book_id == session.book_id
+            )
+        )
+    }
     last_type = db.get(Question, served[-1].question_id).question_type if served else None
     last_topic = db.get(Question, served[-1].question_id).topic_id if served else None
 
@@ -502,7 +673,14 @@ def _complete(db: Session, actor: CurrentActor, session: QuizSession) -> list[di
     session.status = "completed"
     session.completed_at = datetime.now(UTC)
     book = db.get(Book, session.book_id)
-    track(db, "lesson_completed", actor.key, session.book_id, session_type=session.session_type, count=session.answered_count)
+    track(
+        db,
+        "lesson_completed",
+        actor.key,
+        session.book_id,
+        session_type=session.session_type,
+        count=session.answered_count,
+    )
     earned = ls.evaluate_achievements(db, actor, book, session)
     if session.session_type == "lesson" and session.chapter_id:
         stats = ls.chapter_stats(db, actor, book)
@@ -512,31 +690,60 @@ def _complete(db: Session, actor: CurrentActor, session: QuizSession) -> list[di
 
 
 def submit_answer(
-    db: Session, actor: CurrentActor, session: QuizSession, question_id: uuid.UUID, selected: str, duration_ms: int | None
+    db: Session,
+    actor: CurrentActor,
+    session: QuizSession,
+    question_id: uuid.UUID,
+    selected: str,
+    duration_ms: int | None,
 ) -> dict:
     if selected not in KEYS:
         raise AppError(ErrorCode.VALIDATION_ERROR, "Choose one of the four options.", status_code=422)
-    served = db.scalar(select(SessionQuestion).where(SessionQuestion.quiz_session_id == session.id, SessionQuestion.question_id == question_id))
+    served = db.scalar(
+        select(SessionQuestion).where(
+            SessionQuestion.quiz_session_id == session.id, SessionQuestion.question_id == question_id
+        )
+    )
     if served is None:
         raise AppError(ErrorCode.NOT_FOUND, "This question is not part of the session.", status_code=404)
     question = db.get(Question, question_id)
     assert question is not None
-    existing = db.scalar(select(QuestionAttempt).where(QuestionAttempt.quiz_session_id == session.id, QuestionAttempt.question_id == question_id))
+    existing = db.scalar(
+        select(QuestionAttempt).where(
+            QuestionAttempt.quiz_session_id == session.id, QuestionAttempt.question_id == question_id
+        )
+    )
     if existing is not None:
         # Idempotent: the first submission is final; replays return the original result.
-        return _feedback(db, actor, session, question, existing, mastery=None, earned=[], already_answered=True)
+        return _feedback(
+            db, actor, session, question, existing, mastery=None, earned=[], already_answered=True
+        )
     if session.status != "active":
         raise AppError(ErrorCode.CONFLICT, "This session is no longer active.", status_code=409)
     is_correct = selected == question.correct_option_key
-    attempt = QuestionAttempt(quiz_session_id=session.id, question_id=question.id, selected_option_key=selected,
-                              is_correct=is_correct, response_duration_ms=duration_ms if duration_ms and 0 < duration_ms < 3_600_000 else None)
+    attempt = QuestionAttempt(
+        quiz_session_id=session.id,
+        question_id=question.id,
+        selected_option_key=selected,
+        is_correct=is_correct,
+        response_duration_ms=duration_ms if duration_ms and 0 < duration_ms < 3_600_000 else None,
+    )
     db.add(attempt)
     session.answered_count += 1
     session.correct_count += 1 if is_correct else 0
     mastery = ls.update_mastery(db, actor, question, is_correct)
     attempts = _attempts(db, session)
-    session.difficulty = ls.next_difficulty(session.difficulty, [a.is_correct for a in attempts], [a.response_duration_ms for a in attempts])
-    track(db, "question_answered", actor.key, session.book_id, question_type=question.question_type, difficulty=question.difficulty)
+    session.difficulty = ls.next_difficulty(
+        session.difficulty, [a.is_correct for a in attempts], [a.response_duration_ms for a in attempts]
+    )
+    track(
+        db,
+        "question_answered",
+        actor.key,
+        session.book_id,
+        question_type=question.question_type,
+        difficulty=question.difficulty,
+    )
     track(db, "answer_correct" if is_correct else "answer_incorrect", actor.key, session.book_id)
     earned: list[dict] = []
     if session.answered_count >= session.question_count:
@@ -544,10 +751,14 @@ def submit_answer(
     else:
         earned = ls.evaluate_achievements(db, actor, None, session)
     db.commit()
-    return _feedback(db, actor, session, question, attempt, mastery=mastery, earned=earned, already_answered=False)
+    return _feedback(
+        db, actor, session, question, attempt, mastery=mastery, earned=earned, already_answered=False
+    )
 
 
-def _feedback(db, actor, session, question: Question, attempt: QuestionAttempt, *, mastery, earned, already_answered) -> dict:
+def _feedback(
+    db, actor, session, question: Question, attempt: QuestionAttempt, *, mastery, earned, already_answered
+) -> dict:
     correct_text = next(o["text"] for o in question.options_json if o["key"] == question.correct_option_key)
     topic = db.get(Topic, question.topic_id) if question.topic_id else None
     return {
@@ -561,7 +772,9 @@ def _feedback(db, actor, session, question: Question, attempt: QuestionAttempt, 
         "evidence": list(evidence_payload(db, question.evidence_ids).values()),
         "already_answered": already_answered,
         "topic": {"id": str(topic.id), "title": topic.title} if topic else None,
-        "mastery": {"score": mastery.mastery_score, "confidence": mastery.confidence_level} if mastery else None,
+        "mastery": {"score": mastery.mastery_score, "confidence": mastery.confidence_level}
+        if mastery
+        else None,
         "session": serialize_session(session),
         "achievements_earned": earned,
     }

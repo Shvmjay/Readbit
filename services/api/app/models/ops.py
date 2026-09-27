@@ -19,7 +19,9 @@ class AIExecution(IdMixin, Base):
 
     book_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("books.id", ondelete="SET NULL"))
     user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
-    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("guest_sessions.id", ondelete="SET NULL"))
+    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("guest_sessions.id", ondelete="SET NULL")
+    )
     task_type: Mapped[str] = mapped_column(String(40))
     provider: Mapped[str] = mapped_column(String(40))
     model: Mapped[str] = mapped_column(String(80))

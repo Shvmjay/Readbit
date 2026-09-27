@@ -37,7 +37,9 @@ def excerpt_limit(text: str) -> str:
     return cut + "…"
 
 
-def get_or_create_evidence(db: Session, book: Book, chunk: DocumentChunk, claim: str) -> tuple[EvidenceReference, float]:
+def get_or_create_evidence(
+    db: Session, book: Book, chunk: DocumentChunk, claim: str
+) -> tuple[EvidenceReference, float]:
     sentence, start, end, score = best_support(claim, chunk.text_content)
     existing = db.scalar(
         select(EvidenceReference).where(

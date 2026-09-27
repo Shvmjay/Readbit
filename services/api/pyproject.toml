@@ -45,7 +45,7 @@ include = ["app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-filterwarnings = ["ignore::DeprecationWarning"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::bs4.XMLParsedAsHTMLWarning"]
 
 [tool.ruff]
 line-length = 110
@@ -53,11 +53,12 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "W"]
-ignore = ["S101", "B008", "S311", "E501", "UP046", "UP047"]
+ignore = ["S101", "B008", "S311", "E501", "UP046", "UP047", "S110", "S112"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S", "B"]
 "app/evaluations/*" = ["S"]
+"app/document_processing/pdf.py" = ["B023"]  # line-handling closures run within the same iteration
 
 [tool.mypy]
 python_version = "3.11"

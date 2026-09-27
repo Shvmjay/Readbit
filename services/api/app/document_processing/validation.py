@@ -84,17 +84,27 @@ def check_epub_archive(data: bytes) -> None:
         if info.flag_bits & 0x1:
             raise AppError(ErrorCode.PASSWORD_PROTECTED, "This EPUB is encrypted.", status_code=422)
         total += info.file_size
-        if info.compress_size and info.file_size > 1_000_000 and info.file_size / info.compress_size > MAX_COMPRESSION_RATIO:
-            raise AppError(ErrorCode.UNSUPPORTED_FILE, "The EPUB has a suspicious compression ratio.", status_code=422)
+        if (
+            info.compress_size
+            and info.file_size > 1_000_000
+            and info.file_size / info.compress_size > MAX_COMPRESSION_RATIO
+        ):
+            raise AppError(
+                ErrorCode.UNSUPPORTED_FILE, "The EPUB has a suspicious compression ratio.", status_code=422
+            )
     if total > MAX_EPUB_UNCOMPRESSED:
-        raise AppError(ErrorCode.FILE_TOO_LARGE, "The EPUB expands beyond the processing limit.", status_code=413)
+        raise AppError(
+            ErrorCode.FILE_TOO_LARGE, "The EPUB expands beyond the processing limit.", status_code=413
+        )
     names = set(zf.namelist())
     if "mimetype" in names:
         mt = zf.read("mimetype")[:64].decode("ascii", "ignore").strip()
         if mt != EPUB_MIME:
             raise _unsupported("This archive is not an EPUB.")
     if "META-INF/container.xml" not in names:
-        raise AppError(ErrorCode.CORRUPTED_DOCUMENT, "The EPUB is missing its container manifest.", status_code=422)
+        raise AppError(
+            ErrorCode.CORRUPTED_DOCUMENT, "The EPUB is missing its container manifest.", status_code=422
+        )
     if "META-INF/encryption.xml" in names:
         # Font obfuscation is common and harmless; DRM encryption of content documents is not supported.
         enc = zf.read("META-INF/encryption.xml").decode("utf-8", "ignore")

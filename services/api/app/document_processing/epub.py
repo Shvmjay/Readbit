@@ -30,10 +30,42 @@ NS = {
     "dc": "http://purl.org/dc/elements/1.1/",
     "ncx": "http://www.daisy.org/z3986/2005/ncx/",
 }
-STRIP_TAGS = ["script", "style", "iframe", "object", "embed", "svg", "math", "form", "input", "button", "noscript",
-              "audio", "video", "canvas", "template", "head"]
-BLOCK_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "blockquote", "pre", "dt", "dd", "figcaption", "td",
-              "th", "caption"}
+STRIP_TAGS = [
+    "script",
+    "style",
+    "iframe",
+    "object",
+    "embed",
+    "svg",
+    "math",
+    "form",
+    "input",
+    "button",
+    "noscript",
+    "audio",
+    "video",
+    "canvas",
+    "template",
+    "head",
+]
+BLOCK_TAGS = {
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "li",
+    "blockquote",
+    "pre",
+    "dt",
+    "dd",
+    "figcaption",
+    "td",
+    "th",
+    "caption",
+}
 MAX_MEMBER_BYTES = 20 * 1024 * 1024
 
 
@@ -45,7 +77,11 @@ def _read(zf: zipfile.ZipFile, name: str) -> bytes:
 
 
 def _resolve(base_dir: str, href: str) -> str:
-    return posixpath.normpath(posixpath.join(base_dir, unquote(href))) if base_dir else posixpath.normpath(unquote(href))
+    return (
+        posixpath.normpath(posixpath.join(base_dir, unquote(href)))
+        if base_dir
+        else posixpath.normpath(unquote(href))
+    )
 
 
 def extract_epub(data: bytes) -> ExtractedDocument:
@@ -61,7 +97,9 @@ def extract_epub(data: bytes) -> ExtractedDocument:
     except AppError:
         raise
     except Exception as exc:  # noqa: BLE001
-        raise AppError(ErrorCode.CORRUPTED_DOCUMENT, "The EPUB package could not be read.", status_code=422) from exc
+        raise AppError(
+            ErrorCode.CORRUPTED_DOCUMENT, "The EPUB package could not be read.", status_code=422
+        ) from exc
 
     base = posixpath.dirname(opf_path)
     doc = ExtractedDocument(format="epub", blocks=[])
@@ -72,7 +110,11 @@ def extract_epub(data: bytes) -> ExtractedDocument:
         lang = md.find("dc:language", NS)
         doc.title = collapse_whitespace(t.text or "") or None if t is not None and t.text else None
         doc.author = collapse_whitespace(a.text or "") or None if a is not None and a.text else None
-        doc.language = (lang.text or "").strip().split("-")[0].lower() or None if lang is not None and lang.text else None
+        doc.language = (
+            (lang.text or "").strip().split("-")[0].lower() or None
+            if lang is not None and lang.text
+            else None
+        )
 
     manifest: dict[str, dict] = {}
     for item in opf.findall("opf:manifest/opf:item", NS):
@@ -83,14 +125,18 @@ def extract_epub(data: bytes) -> ExtractedDocument:
         }
     spine_el = opf.find("opf:spine", NS)
     if spine_el is None:
-        raise AppError(ErrorCode.CORRUPTED_DOCUMENT, "The EPUB has no reading order (spine).", status_code=422)
+        raise AppError(
+            ErrorCode.CORRUPTED_DOCUMENT, "The EPUB has no reading order (spine).", status_code=422
+        )
     spine = []
     for ref in spine_el.findall("opf:itemref", NS):
         item = manifest.get(ref.attrib.get("idref", ""))
         if item and item["media"] in ("application/xhtml+xml", "text/html"):
             spine.append(item["href"])
     if len(spine) > get_settings().max_document_pages:
-        raise AppError(ErrorCode.DOCUMENT_TOO_LONG, "This EPUB has too many sections to process.", status_code=422)
+        raise AppError(
+            ErrorCode.DOCUMENT_TOO_LONG, "This EPUB has too many sections to process.", status_code=422
+        )
     doc.page_count = None
 
     # Table of contents: EPUB3 nav document first, then EPUB2 NCX.
@@ -100,7 +146,9 @@ def extract_epub(data: bytes) -> ExtractedDocument:
         doc.toc = _parse_nav(_read(zf, nav["href"]), posixpath.dirname(nav["href"]))
     if not doc.toc:
         toc_id = spine_el.attrib.get("toc")
-        ncx = manifest.get(toc_id or "") or next((m for m in manifest.values() if m["media"] == "application/x-dtbncx+xml"), None)
+        ncx = manifest.get(toc_id or "") or next(
+            (m for m in manifest.values() if m["media"] == "application/x-dtbncx+xml"), None
+        )
         if ncx and ncx["href"] in names:
             doc.toc = _parse_ncx(_read(zf, ncx["href"]), posixpath.dirname(ncx["href"]))
 
@@ -118,7 +166,9 @@ def extract_epub(data: bytes) -> ExtractedDocument:
 def _parse_nav(raw: bytes, base: str) -> list[TocEntry]:
     soup = BeautifulSoup(raw, "lxml")
     navs = soup.find_all("nav")
-    toc_nav = next((n for n in navs if "toc" in (n.get("epub:type") or n.get("type") or "")), navs[0] if navs else None)
+    toc_nav = next(
+        (n for n in navs if "toc" in (n.get("epub:type") or n.get("type") or "")), navs[0] if navs else None
+    )
     if toc_nav is None:
         return []
     out: list[TocEntry] = []
@@ -131,7 +181,11 @@ def _parse_nav(raw: bytes, base: str) -> list[TocEntry]:
                 href = a.get("href")
                 if title and href:
                     path, frag = urldefrag(href)
-                    out.append(TocEntry(title=title[:300], level=level, href=_resolve(base, path), fragment=frag or None))
+                    out.append(
+                        TocEntry(
+                            title=title[:300], level=level, href=_resolve(base, path), fragment=frag or None
+                        )
+                    )
             child = li.find("ol", recursive=False)
             if child is not None:
                 walk(child, level + 1)
@@ -153,8 +207,12 @@ def _parse_ncx(raw: bytes, base: str) -> list[TocEntry]:
             if label is not None and content is not None and label.text:
                 path, frag = urldefrag(content.attrib.get("src", ""))
                 out.append(
-                    TocEntry(title=collapse_whitespace(label.text)[:300], level=level, href=_resolve(base, path),
-                             fragment=frag or None)
+                    TocEntry(
+                        title=collapse_whitespace(label.text)[:300],
+                        level=level,
+                        href=_resolve(base, path),
+                        fragment=frag or None,
+                    )
                 )
             walk(np, level + 1)
 

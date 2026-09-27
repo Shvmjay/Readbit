@@ -61,7 +61,12 @@ def _map_toc_entry(doc: ExtractedDocument, entry: TocEntry) -> int | None:
         return best if best_score >= 0.6 else on_page[0]
     if doc.format == "epub" and entry.href:
         for i, b in enumerate(blocks):
-            if b.href == entry.href and (entry.fragment is None or entry.fragment in b.anchors or "" in b.anchors and entry.fragment is None):
+            if b.href == entry.href and (
+                entry.fragment is None
+                or entry.fragment in b.anchors
+                or "" in b.anchors
+                and entry.fragment is None
+            ):
                 if entry.fragment is None or entry.fragment in b.anchors:
                     return i
         # Fragment not found → first block of that document.
@@ -71,12 +76,18 @@ def _map_toc_entry(doc: ExtractedDocument, entry: TocEntry) -> int | None:
     return None
 
 
-def _from_starts(doc: ExtractedDocument, starts: list[tuple[int, str]], method: str, conf: float) -> list[ChapterSpec]:
+def _from_starts(
+    doc: ExtractedDocument, starts: list[tuple[int, str]], method: str, conf: float
+) -> list[ChapterSpec]:
     starts = sorted({s: t for s, t in starts}.items())
     specs: list[ChapterSpec] = []
     n = len(doc.blocks)
     if starts and starts[0][0] > 0 and _words(doc.blocks[: starts[0][0]]) >= 150:
-        specs.append(ChapterSpec("Front matter (before the first detected chapter)", 0, starts[0][0], "front_matter", conf))
+        specs.append(
+            ChapterSpec(
+                "Front matter (before the first detected chapter)", 0, starts[0][0], "front_matter", conf
+            )
+        )
     # Shorter front matter (title page, copyright lines) is excluded from chapter text.
     for k, (start, title) in enumerate(starts):
         end = starts[k + 1][0] if k + 1 < len(starts) else n
@@ -85,7 +96,11 @@ def _from_starts(doc: ExtractedDocument, starts: list[tuple[int, str]], method: 
     # Merge chapters that are too small to be meaningful into their neighbour (keeps the first title).
     merged: list[ChapterSpec] = []
     for spec in specs:
-        if merged and _words(doc.blocks[spec.start_block : spec.end_block]) < MIN_CHAPTER_WORDS and spec.method != "front_matter":
+        if (
+            merged
+            and _words(doc.blocks[spec.start_block : spec.end_block]) < MIN_CHAPTER_WORDS
+            and spec.method != "front_matter"
+        ):
             # A heading-only "part" divider: attach its blocks to the next chapter by extending the previous one.
             merged[-1].end_block = spec.end_block
             continue
@@ -117,7 +132,9 @@ def detect_chapters(doc: ExtractedDocument) -> tuple[list[ChapterSpec], float]:
     while i < n:
         b = doc.blocks[i]
         text = b.text.strip()
-        is_chapter = CHAPTER_HEADING.match(text) or (b.kind == "heading" and b.level == 1 and doc.format == "epub")
+        is_chapter = CHAPTER_HEADING.match(text) or (
+            b.kind == "heading" and b.level == 1 and doc.format == "epub"
+        )
         if b.kind == "heading" and is_chapter and len(text) <= 120:
             title = text
             # "Chapter 3" followed by a short heading line → "Chapter 3: The Title"
@@ -140,7 +157,11 @@ def detect_chapters(doc: ExtractedDocument) -> tuple[list[ChapterSpec], float]:
         if len(spine_starts) >= 2:
             return _from_starts(doc, spine_starts, "epub_spine", 0.7), 0.7
 
-    numbered = [(i, b.text) for i, b in enumerate(doc.blocks) if b.kind == "heading" and NUMBERED_HEADING.match(b.text)]
+    numbered = [
+        (i, b.text)
+        for i, b in enumerate(doc.blocks)
+        if b.kind == "heading" and NUMBERED_HEADING.match(b.text)
+    ]
     if len(numbered) >= 2:
         return _from_starts(doc, numbered, "numbered_heading", 0.65), 0.65
 
@@ -162,7 +183,9 @@ def fallback_segments(doc: ExtractedDocument) -> list[ChapterSpec]:
         blocks = doc.blocks[spec.start_block : spec.end_block]
         pages = [b.page_index for b in blocks if b.page_index is not None]
         if pages:
-            spec.title = f"Section {k} (pages {min(pages) + 1}–{max(pages) + 1}, no chapter headings detected)"
+            spec.title = (
+                f"Section {k} (pages {min(pages) + 1}–{max(pages) + 1}, no chapter headings detected)"
+            )
         else:
             spec.title = f"Section {k} (no chapter headings detected)"
         if len(specs) == 1:

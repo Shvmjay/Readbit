@@ -20,7 +20,16 @@ TRANSITIONS: dict[str, set[str]] = {
     "ready": set(),
     "failed": {"uploaded"},
 }
-PROGRESS = {"uploaded": 5, "validating": 10, "extracting": 30, "structuring": 55, "chunking": 70, "indexing": 85, "ready": 100, "failed": 0}
+PROGRESS = {
+    "uploaded": 5,
+    "validating": 10,
+    "extracting": 30,
+    "structuring": 55,
+    "chunking": 70,
+    "indexing": 85,
+    "ready": 100,
+    "failed": 0,
+}
 
 LEARNING_TRANSITIONS: dict[str, set[str]] = {
     "not_started": {"generating_questions"},
@@ -36,7 +45,9 @@ def transition(book, new_status: str) -> None:
     if new_status == current:
         return
     if new_status not in TRANSITIONS.get(current, set()):
-        raise AppError(ErrorCode.CONFLICT, f"Invalid processing transition {current} → {new_status}.", status_code=409)
+        raise AppError(
+            ErrorCode.CONFLICT, f"Invalid processing transition {current} → {new_status}.", status_code=409
+        )
     book.processing_status = new_status
 
 
@@ -45,5 +56,7 @@ def learning_transition(book, new_status: str) -> None:
     if new_status == current:
         return
     if new_status not in LEARNING_TRANSITIONS.get(current, set()):
-        raise AppError(ErrorCode.CONFLICT, f"Invalid learning transition {current} → {new_status}.", status_code=409)
+        raise AppError(
+            ErrorCode.CONFLICT, f"Invalid learning transition {current} → {new_status}.", status_code=409
+        )
     book.learning_status = new_status

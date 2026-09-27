@@ -45,7 +45,9 @@ class Book(IdMixin, TimestampMixin, Base):
         Index("ix_books_owner_hash", "owner_user_id", "content_hash"),
     )
 
-    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     guest_session_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("guest_sessions.id", ondelete="CASCADE"), index=True
     )
@@ -56,7 +58,9 @@ class Book(IdMixin, TimestampMixin, Base):
     original_language: Mapped[str | None] = mapped_column(String(16))
     detected_language: Mapped[str | None] = mapped_column(String(16))
     file_format: Mapped[str] = mapped_column(String(10))
-    source_file_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("source_files.id", ondelete="SET NULL"))
+    source_file_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("source_files.id", ondelete="SET NULL")
+    )
     content_hash: Mapped[str] = mapped_column(String(64))
     processing_status: Mapped[str] = mapped_column(String(32), default="uploaded", index=True)
     learning_status: Mapped[str] = mapped_column(String(32), default="not_started")
@@ -145,7 +149,9 @@ class ProcessingJob(IdMixin, Base):
     job_type: Mapped[str] = mapped_column(String(40))  # ingest | summary | question_bank
     target_id: Mapped[uuid.UUID | None] = mapped_column()  # e.g. summary id or chapter id
     params: Mapped[dict] = mapped_column(JSONType, default=dict)
-    status: Mapped[str] = mapped_column(String(20), default="queued")  # queued|running|succeeded|failed|cancelled
+    status: Mapped[str] = mapped_column(
+        String(20), default="queued"
+    )  # queued|running|succeeded|failed|cancelled
     stage: Mapped[str] = mapped_column(String(40), default="queued")
     progress_percent: Mapped[int] = mapped_column(Integer, default=0)
     attempts: Mapped[int] = mapped_column(Integer, default=0)

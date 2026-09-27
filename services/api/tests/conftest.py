@@ -40,7 +40,9 @@ def fixture_bytes(name: str) -> bytes:
         import subprocess
         import sys
 
-        subprocess.run([sys.executable, str(FIXTURES.parents[1] / "scripts" / "generate_fixtures.py")], check=True)
+        subprocess.run(
+            [sys.executable, str(FIXTURES.parents[1] / "scripts" / "generate_fixtures.py")], check=True
+        )
     return path.read_bytes()
 
 
@@ -85,8 +87,12 @@ def start_guest(client: TestClient) -> TestClient:
     return client
 
 
-def register(client: TestClient, email: str = "reader@example.com", password: str = "correct-horse-42") -> dict:
-    r = client.post("/api/v1/auth/register", json={"email": email, "password": password, "display_name": "Reader"})
+def register(
+    client: TestClient, email: str = "reader@example.com", password: str = "correct-horse-42"
+) -> dict:
+    r = client.post(
+        "/api/v1/auth/register", json={"email": email, "password": password, "display_name": "Reader"}
+    )
     assert r.status_code == 201, r.text
     return r.json()
 

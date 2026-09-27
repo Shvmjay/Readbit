@@ -40,7 +40,9 @@ class Topic(IdMixin, Base):
 class Question(IdMixin, TimestampMixin, Base):
     __tablename__ = "questions"
     __table_args__ = (
-        CheckConstraint("question_type IN ('recall','comprehension','application','inference')", name="qtype"),
+        CheckConstraint(
+            "question_type IN ('recall','comprehension','application','inference')", name="qtype"
+        ),
         CheckConstraint("difficulty BETWEEN 1 AND 3", name="qdifficulty"),
         CheckConstraint("correct_option_key IN ('A','B','C','D')", name="qcorrect_key"),
         Index("ix_questions_bank", "book_id", "chapter_id", "validation_status", "language"),
@@ -80,10 +82,14 @@ class QuizSession(IdMixin, Base):
 
     book_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"))
     owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("guest_sessions.id", ondelete="CASCADE"))
+    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("guest_sessions.id", ondelete="CASCADE")
+    )
     chapter_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("chapters.id", ondelete="SET NULL"))
     session_type: Mapped[str] = mapped_column(String(16), default="lesson")
-    status: Mapped[str] = mapped_column(String(16), default="preparing")  # preparing|active|completed|unavailable
+    status: Mapped[str] = mapped_column(
+        String(16), default="preparing"
+    )  # preparing|active|completed|unavailable
     difficulty: Mapped[int] = mapped_column(Integer, default=1)
     language: Mapped[str] = mapped_column(String(8), default="en")
     question_count: Mapped[int] = mapped_column(Integer, default=5)
@@ -117,7 +123,9 @@ class QuestionAttempt(IdMixin, Base):
         Index("ix_attempts_question", "question_id"),
     )
 
-    quiz_session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("quiz_sessions.id", ondelete="CASCADE"), index=True)
+    quiz_session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("quiz_sessions.id", ondelete="CASCADE"), index=True
+    )
     question_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("questions.id", ondelete="CASCADE"))
     selected_option_key: Mapped[str] = mapped_column(String(1))
     is_correct: Mapped[bool] = mapped_column()
@@ -135,7 +143,9 @@ class TopicMastery(IdMixin, Base):
     )
 
     owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("guest_sessions.id", ondelete="CASCADE"))
+    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("guest_sessions.id", ondelete="CASCADE")
+    )
     actor_key: Mapped[str] = mapped_column(String(40))
     book_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"))
     topic_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("topics.id", ondelete="CASCADE"))
@@ -167,12 +177,14 @@ class UserAchievement(IdMixin, Base):
         UniqueConstraint("achievement_id", "actor_key", "scope_key", name="uq_user_achievement"),
     )
 
-    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("guest_sessions.id", ondelete="CASCADE"))
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("guest_sessions.id", ondelete="CASCADE")
+    )
     actor_key: Mapped[str] = mapped_column(String(40))
     scope_key: Mapped[str] = mapped_column(String(40), default="global")  # book id or "global"
     achievement_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("achievements.id", ondelete="CASCADE"))
     book_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"))
     earned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-

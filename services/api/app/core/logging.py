@@ -36,7 +36,8 @@ def configure_logging(level: str = "INFO") -> None:
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(JsonFormatter())
     root = logging.getLogger()
-    root.handlers[:] = [handler]
+    # Replace only our own handler (idempotent); leave handlers installed by test tools or hosts alone.
+    root.handlers[:] = [h for h in root.handlers if not isinstance(h.formatter, JsonFormatter)] + [handler]
     root.setLevel(level.upper())
     for noisy in ("httpx", "httpcore", "botocore", "urllib3", "pypdf"):
         logging.getLogger(noisy).setLevel(logging.WARNING)

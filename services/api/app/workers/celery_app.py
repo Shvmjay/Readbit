@@ -1,7 +1,7 @@
 """Celery application. Start workers with:
 
-    celery -A app.workers.celery_app worker -Q documents,summaries,questions,maintenance --concurrency 2
-    celery -A app.workers.celery_app beat   # scheduled retention cleanup
+celery -A app.workers.celery_app worker -Q documents,summaries,questions,maintenance --concurrency 2
+celery -A app.workers.celery_app beat   # scheduled retention cleanup
 """
 
 from __future__ import annotations

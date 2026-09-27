@@ -37,7 +37,9 @@ def require_actor(actor: CurrentActor | None = Depends(optional_actor)) -> Curre
 
 def require_user(actor: CurrentActor = Depends(require_actor)) -> CurrentActor:
     if actor.user is None:
-        raise AppError(ErrorCode.UNAUTHORIZED, "Create an account or sign in to use this feature.", status_code=401)
+        raise AppError(
+            ErrorCode.UNAUTHORIZED, "Create an account or sign in to use this feature.", status_code=401
+        )
     return actor
 
 

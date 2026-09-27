@@ -43,8 +43,12 @@ CAVEAT_CUES = re.compile(
     r"limitation|may not|not as a proven|cannot)\b",
     re.I,
 )
-CONCLUSION_CUES = re.compile(r"\b(concludes|in conclusion|closes|ends by|ends with|finally|overall|in short)\b", re.I)
-THESIS_CUES = re.compile(r"\b(argues|claims|central idea|main idea|the central|thesis|contends|the author)\b", re.I)
+CONCLUSION_CUES = re.compile(
+    r"\b(concludes|in conclusion|closes|ends by|ends with|finally|overall|in short)\b", re.I
+)
+THESIS_CUES = re.compile(
+    r"\b(argues|claims|central idea|main idea|the central|thesis|contends|the author)\b", re.I
+)
 DEFINITION_CUES = re.compile(
     r"\b(defines?|definition|is called|calls this|calls it|refers to|known as|is the (?:sense|ability|idea|finding)|"
     r"we call|she calls|he calls|कहती हैं|कहते हैं)\b",
@@ -55,18 +59,44 @@ INJECTION = re.compile(
     r"^system\s*:|the assistant must)",
     re.I,
 )
-NUMBER_WORDS = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "twelve", "fifteen",
-                "twenty", "twenty-five", "thirty", "forty", "fifty", "sixty", "hundred"]
+NUMBER_WORDS = [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "twelve",
+    "fifteen",
+    "twenty",
+    "twenty-five",
+    "thirty",
+    "forty",
+    "fifty",
+    "sixty",
+    "hundred",
+]
 NUMBER_PHRASE = re.compile(
     r"\b((?:\d+(?:[.,]\d+)?|" + "|".join(sorted(NUMBER_WORDS, key=len, reverse=True)) + r")"
-    r"(?:\s+(?:and|to|or)\s+(?:\d+(?:[.,]\d+)?|" + "|".join(sorted(NUMBER_WORDS, key=len, reverse=True)) + r"))?"
+    r"(?:\s+(?:and|to|or)\s+(?:\d+(?:[.,]\d+)?|"
+    + "|".join(sorted(NUMBER_WORDS, key=len, reverse=True))
+    + r"))?"
     r"\s+(?:[a-z]+\s+)?(?:minutes?|hours?|days?|weeks?|months?|years?|times?|parts?|steps?|degrees?(?:\s+celsius)?|"
     r"centimetres?|metres?|kilometres?|cubic metres?|ideas|questions|kinds|groups))\b",
     re.I,
 )
 TERM_PATTERNS = [
-    re.compile(r"\bcalls? (?:this|it|them)(?: [a-z]+)? (?:the )?([a-z][a-z\- ]{2,40}?)(?=[,.;:]| and\b)", re.I),
-    re.compile(r"\b(?:idea|concept|method|practice|principle) (?:of |called |(?:she|he|they|the author) calls? )(?:the )?([a-z][a-z\- ]{2,40}?)(?=[,.;:])", re.I),
+    re.compile(
+        r"\bcalls? (?:this|it|them)(?: [a-z]+)? (?:the )?([a-z][a-z\- ]{2,40}?)(?=[,.;:]| and\b)", re.I
+    ),
+    re.compile(
+        r"\b(?:idea|concept|method|practice|principle) (?:of |called |(?:she|he|they|the author) calls? )(?:the )?([a-z][a-z\- ]{2,40}?)(?=[,.;:])",
+        re.I,
+    ),
     re.compile(r"\bknown as (?:the )?([a-z][a-z\- ]{2,40}?)(?=[,.;:])", re.I),
     re.compile(r"\bthe ([a-z]+ effect)\b", re.I),
     re.compile(r"^([A-Z][a-z]+(?: [a-z]+){0,2})(?:, [^,]{0,60},)? (?:is|are) (?:the|a|an) ", 0),
@@ -143,12 +173,23 @@ def _key_terms(text_units: list[str], limit: int = 8) -> list[str]:
                 for m in pat.finditer(s):
                     term = re.sub(r"\s+", " ", m.group(1)).strip(" -").lower()
                     term = re.sub(r"^(the|a|an) ", "", term)
-                    if 3 <= len(term) <= 40 and term not in STOPWORDS and not set(term.split()) & COMMON_VERBS:
+                    if (
+                        3 <= len(term) <= 40
+                        and term not in STOPWORDS
+                        and not set(term.split()) & COMMON_VERBS
+                    ):
                         if term not in defined:
                             defined.append(term)
         toks = [t for t in tokenize(unit)]
         for a, b in zip(toks, toks[1:], strict=False):
-            if a not in STOPWORDS and b not in STOPWORDS and len(a) > 2 and len(b) > 2 and not (a.isdigit() or b.isdigit()) and not a.endswith("ed"):
+            if (
+                a not in STOPWORDS
+                and b not in STOPWORDS
+                and len(a) > 2
+                and len(b) > 2
+                and not (a.isdigit() or b.isdigit())
+                and not a.endswith("ed")
+            ):
                 if not ({a, b} & COMMON_VERBS):
                     counts[f"{a} {b}"] += 1
         for t in content_words(unit):
@@ -167,9 +208,33 @@ def _key_terms(text_units: list[str], limit: int = 8) -> list[str]:
 
 
 DEPTH = {
-    "concise": {"sections": 2, "per_section": 2, "examples": 1, "caveats": 1, "definitions": 2, "takeaways": 3, "ratio": 0.45},
-    "balanced": {"sections": 4, "per_section": 3, "examples": 2, "caveats": 2, "definitions": 3, "takeaways": 4, "ratio": 0.7},
-    "comprehensive": {"sections": 6, "per_section": 5, "examples": 4, "caveats": 4, "definitions": 5, "takeaways": 5, "ratio": 1.0},
+    "concise": {
+        "sections": 2,
+        "per_section": 2,
+        "examples": 1,
+        "caveats": 1,
+        "definitions": 2,
+        "takeaways": 3,
+        "ratio": 0.45,
+    },
+    "balanced": {
+        "sections": 4,
+        "per_section": 3,
+        "examples": 2,
+        "caveats": 2,
+        "definitions": 3,
+        "takeaways": 4,
+        "ratio": 0.7,
+    },
+    "comprehensive": {
+        "sections": 6,
+        "per_section": 5,
+        "examples": 4,
+        "caveats": 4,
+        "definitions": 5,
+        "takeaways": 5,
+        "ratio": 1.0,
+    },
 }
 
 
@@ -185,7 +250,9 @@ class ExtractiveProvider(LLMProvider):
     def generate(self, request: GenerationRequest, timeout: float) -> GenerationResult:
         handler = getattr(self, f"_task_{request.task}", None)
         if handler is None:
-            raise ProviderError(f"task {request.task} unsupported offline", retryable=False, category="unsupported")
+            raise ProviderError(
+                f"task {request.task} unsupported offline", retryable=False, category="unsupported"
+            )
         data = handler(request.context, request)
         return GenerationResult(data=data, provider=self.name, model=MODEL)
 
@@ -205,6 +272,7 @@ class ExtractiveProvider(LLMProvider):
             return {"text": s.text, "evidence_ids": [s.pid]}
 
         early = [s for s in sents if s.pos <= max(1, int(len(sents) * 0.4))]
+
         def thesis_score(s: Sent) -> float:
             bonus = 1.0 if THESIS_CUES.search(s.text) else 0.0
             bonus += 0.4 if s.pos < 2 else 0.0
@@ -215,11 +283,15 @@ class ExtractiveProvider(LLMProvider):
         thesis = take(thesis_s)
 
         concl_candidates = [s for s in sents if CONCLUSION_CUES.search(s.text) and s.pos not in used]
-        concl_s = concl_candidates[-1] if concl_candidates else (sents[-1] if sents[-1].pos not in used else None)
+        concl_s = (
+            concl_candidates[-1] if concl_candidates else (sents[-1] if sents[-1].pos not in used else None)
+        )
         conclusion = take(concl_s) if concl_s else {"text": "", "evidence_ids": []}
 
         definitions = []
-        for s in sorted((s for s in sents if DEFINITION_CUES.search(s.text) and s.pos not in used), key=lambda s: -s.score):
+        for s in sorted(
+            (s for s in sents if DEFINITION_CUES.search(s.text) and s.pos not in used), key=lambda s: -s.score
+        ):
             terms = _key_terms([s.text], 1)
             if terms:
                 definitions.append({"term": terms[0], "definition": s.text, "evidence_ids": [s.pid]})
@@ -230,13 +302,18 @@ class ExtractiveProvider(LLMProvider):
 
         examples = [
             {"description": s.text, "evidence_ids": [s.pid]}
-            for s in sorted((s for s in sents if EXAMPLE_CUES.search(s.text) and s.pos not in used), key=lambda s: -s.score)[: cfg["examples"]]
+            for s in sorted(
+                (s for s in sents if EXAMPLE_CUES.search(s.text) and s.pos not in used),
+                key=lambda s: -s.score,
+            )[: cfg["examples"]]
         ]
         for e in examples:
             used.update(s.pos for s in sents if s.text == e["description"])
         caveats = [
             {"text": s.text, "evidence_ids": [s.pid]}
-            for s in sorted((s for s in sents if CAVEAT_CUES.search(s.text) and s.pos not in used), key=lambda s: -s.score)[: cfg["caveats"]]
+            for s in sorted(
+                (s for s in sents if CAVEAT_CUES.search(s.text) and s.pos not in used), key=lambda s: -s.score
+            )[: cfg["caveats"]]
         ]
         for c in caveats:
             used.update(s.pos for s in sents if s.text == c["text"])
@@ -260,8 +337,14 @@ class ExtractiveProvider(LLMProvider):
         words_used = sum(len(s.text.split()) for s in sents if s.pos in used)
         sections = []
         for heading, members in groups:
-            picks = sorted((s for s in members if s.pos not in used), key=lambda s: -s.score)[: cfg["per_section"]]
-            picks = [s for s in picks if (words_used := words_used + len(s.text.split())) <= budget_words or not sections]
+            picks = sorted((s for s in members if s.pos not in used), key=lambda s: -s.score)[
+                : cfg["per_section"]
+            ]
+            picks = [
+                s
+                for s in picks
+                if (words_used := words_used + len(s.text.split())) <= budget_words or not sections
+            ]
             if not picks:
                 continue
             picks.sort(key=lambda s: s.pos)
@@ -273,14 +356,18 @@ class ExtractiveProvider(LLMProvider):
                     "heading": heading or (terms[0].capitalize() if terms else "Key passages"),
                     "content": " ".join(s.text for s in picks),
                     "key_concepts": terms,
-                    "evidence_ids": sorted({s.pid for s in picks}, key=lambda x: int(x[1:]) if x[1:].isdigit() else 0),
+                    "evidence_ids": sorted(
+                        {s.pid for s in picks}, key=lambda x: int(x[1:]) if x[1:].isdigit() else 0
+                    ),
                 }
             )
         remaining = sorted((s for s in sents if s.pos not in used), key=lambda s: -s.score)
         takeaway_src = remaining[: cfg["takeaways"]]
         if len(takeaway_src) < 2:
             takeaway_src = sorted(sents, key=lambda s: -s.score)[: cfg["takeaways"]]
-        takeaways = [{"text": s.text, "evidence_ids": [s.pid]} for s in sorted(takeaway_src, key=lambda s: s.pos)]
+        takeaways = [
+            {"text": s.text, "evidence_ids": [s.pid]} for s in sorted(takeaway_src, key=lambda s: s.pos)
+        ]
         return {
             "title": title,
             "central_thesis": thesis,
@@ -305,21 +392,51 @@ class ExtractiveProvider(LLMProvider):
     @staticmethod
     def _empty_summary(title: str, gap: str) -> dict[str, Any]:
         empty = {"text": "", "evidence_ids": []}
-        return {"title": title, "central_thesis": empty, "sections": [], "definitions": [], "examples": [],
-                "caveats": [], "connections": [], "conclusion": empty, "takeaways": [], "known_gaps": [gap],
-                "language_ok": True}
+        return {
+            "title": title,
+            "central_thesis": empty,
+            "sections": [],
+            "definitions": [],
+            "examples": [],
+            "caveats": [],
+            "connections": [],
+            "conclusion": empty,
+            "takeaways": [],
+            "known_gaps": [gap],
+            "language_ok": True,
+        }
 
     def _task_summary_generator(self, ctx: dict, req: GenerationRequest) -> dict:
-        return self._summarize(ctx["passages"], ctx.get("depth", "balanced"), ctx.get("chapter_title", ""), ctx.get("max_quote_ratio", 0.25))
+        return self._summarize(
+            ctx["passages"],
+            ctx.get("depth", "balanced"),
+            ctx.get("chapter_title", ""),
+            ctx.get("max_quote_ratio", 0.25),
+        )
 
     def _task_summary_passage_notes(self, ctx: dict, req: GenerationRequest) -> dict:
         summary = self._summarize(ctx["passages"], "comprehensive", "", ctx.get("max_quote_ratio", 0.25))
-        notes = [{"kind": "argument", "text": summary["central_thesis"]["text"], "evidence_ids": summary["central_thesis"]["evidence_ids"]}]
+        notes = [
+            {
+                "kind": "argument",
+                "text": summary["central_thesis"]["text"],
+                "evidence_ids": summary["central_thesis"]["evidence_ids"],
+            }
+        ]
         for sec in summary["sections"]:
             notes.append({"kind": "reasoning", "text": sec["content"], "evidence_ids": sec["evidence_ids"]})
-        notes += [{"kind": "example", "text": e["description"], "evidence_ids": e["evidence_ids"]} for e in summary["examples"]]
-        notes += [{"kind": "caveat", "text": c["text"], "evidence_ids": c["evidence_ids"]} for c in summary["caveats"]]
-        notes += [{"kind": "definition", "text": d["definition"], "evidence_ids": d["evidence_ids"]} for d in summary["definitions"]]
+        notes += [
+            {"kind": "example", "text": e["description"], "evidence_ids": e["evidence_ids"]}
+            for e in summary["examples"]
+        ]
+        notes += [
+            {"kind": "caveat", "text": c["text"], "evidence_ids": c["evidence_ids"]}
+            for c in summary["caveats"]
+        ]
+        notes += [
+            {"kind": "definition", "text": d["definition"], "evidence_ids": d["evidence_ids"]}
+            for d in summary["definitions"]
+        ]
         return {"notes": [n for n in notes if n["text"]], "language_ok": True}
 
     def _task_book_summary_aggregator(self, ctx: dict, req: GenerationRequest) -> dict:
@@ -340,19 +457,33 @@ class ExtractiveProvider(LLMProvider):
             if s["conclusion"]["text"] and s["conclusion"]["text"] != th["text"] and depth != "concise":
                 parts.append(s["conclusion"]["text"])
             concepts = [c for sec in s["sections"] for c in sec["key_concepts"]][:3]
-            sections.append({
-                "heading": ch["title"],
-                "content": " ".join(p for p in parts if p),
-                "key_concepts": concepts,
-                "evidence_ids": sorted(set(th["evidence_ids"]) | (set(s["conclusion"]["evidence_ids"]) if len(parts) > 1 else set())),
-            })
+            sections.append(
+                {
+                    "heading": ch["title"],
+                    "content": " ".join(p for p in parts if p),
+                    "key_concepts": concepts,
+                    "evidence_ids": sorted(
+                        set(th["evidence_ids"])
+                        | (set(s["conclusion"]["evidence_ids"]) if len(parts) > 1 else set())
+                    ),
+                }
+            )
             if s["takeaways"]:
                 takeaways.append(s["takeaways"][0])
             definitions.extend(s["definitions"][:1])
             caveats.extend(s["caveats"][:1])
         all_text = " ".join(t["text"] for t in theses)
-        central = max(theses, key=lambda t: token_overlap(t["text"], all_text), default={"text": "", "evidence_ids": []})
-        last = next((ch["summary"]["conclusion"] for ch in reversed(chapters) if ch.get("summary") and ch["summary"]["conclusion"]["text"]), {"text": "", "evidence_ids": []})
+        central = max(
+            theses, key=lambda t: token_overlap(t["text"], all_text), default={"text": "", "evidence_ids": []}
+        )
+        last = next(
+            (
+                ch["summary"]["conclusion"]
+                for ch in reversed(chapters)
+                if ch.get("summary") and ch["summary"]["conclusion"]["text"]
+            ),
+            {"text": "", "evidence_ids": []},
+        )
         return {
             "title": ctx.get("book_title", ""),
             "central_thesis": central,
@@ -362,7 +493,9 @@ class ExtractiveProvider(LLMProvider):
             "caveats": caveats[: cfg["caveats"]],
             "connections": [],
             "conclusion": last,
-            "takeaways": takeaways[: max(cfg["takeaways"], len(chapters)) if depth == "comprehensive" else cfg["takeaways"]],
+            "takeaways": takeaways[
+                : max(cfg["takeaways"], len(chapters)) if depth == "comprehensive" else cfg["takeaways"]
+            ],
             "known_gaps": gaps,
             "language_ok": True,
         }
@@ -403,7 +536,14 @@ class ExtractiveProvider(LLMProvider):
 
     @staticmethod
     def _abstain(reason: str) -> dict:
-        return {"answerable": False, "answer": "", "evidence_ids": [], "confidence": "low", "unanswerable_reason": reason, "language_ok": True}
+        return {
+            "answerable": False,
+            "answer": "",
+            "evidence_ids": [],
+            "confidence": "low",
+            "unanswerable_reason": reason,
+            "language_ok": True,
+        }
 
     # ------------------------------------------------------------------ quiz generation
     def _task_quiz_question_generator(self, ctx: dict, req: GenerationRequest) -> dict:
@@ -465,7 +605,12 @@ class ExtractiveProvider(LLMProvider):
         options = []
         for t in pool:
             tn = normalize_for_match(t)
-            if not tn or tn == normalize_for_match(correct) or tn in normalize_for_match(correct) or normalize_for_match(correct) in tn:
+            if (
+                not tn
+                or tn == normalize_for_match(correct)
+                or tn in normalize_for_match(correct)
+                or normalize_for_match(correct) in tn
+            ):
                 continue
             if re.search(rf"\b{re.escape(tn)}\b", sent_norm):
                 continue
@@ -474,7 +619,9 @@ class ExtractiveProvider(LLMProvider):
         options.sort(key=lambda t: (abs(len(t.split()) - c_words), _seed(seed, t)))
         return options[:3]
 
-    def _cloze(self, s: Sent, pool: list[str], chapter_terms: list[str], chapter: str, lang: str) -> list[dict]:
+    def _cloze(
+        self, s: Sent, pool: list[str], chapter_terms: list[str], chapter: str, lang: str
+    ) -> list[dict]:
         out = []
         for term in chapter_terms:
             m = re.search(rf"\b{re.escape(term)}\b", s.text, re.I)
@@ -485,24 +632,31 @@ class ExtractiveProvider(LLMProvider):
                 continue
             clozed = s.text[: m.start()] + BLANK + s.text[m.end() :]
             stem = (
-                f"पुस्तक के अनुसार रिक्त स्थान भरें ({chapter}): “{clozed}”" if lang == "hi"
+                f"पुस्तक के अनुसार रिक्त स्थान भरें ({chapter}): “{clozed}”"
+                if lang == "hi"
                 else f"Complete the statement from {chapter}: “{clozed}”"
             )
             defined = bool(DEFINITION_CUES.search(s.text))
-            out.append({
-                "question": stem,
-                "question_type": "recall",
-                "difficulty": 1 if defined else 2,
-                "topic": term,
-                "_correct": term,
-                "_distractors": distractors,
-                "_pid": s.pid,
-                "_sentence": s.text,
-                "explanation": (f"पुस्तक में लिखा है: “{s.text}”" if lang == "hi" else f"The book states: “{s.text}”"),
-                "misconception": "" if lang == "hi" else (
-                    f"“{distractors[0]}” is a term from the book, but it is not the one used in this statement."
-                ),
-            })
+            out.append(
+                {
+                    "question": stem,
+                    "question_type": "recall",
+                    "difficulty": 1 if defined else 2,
+                    "topic": term,
+                    "_correct": term,
+                    "_distractors": distractors,
+                    "_pid": s.pid,
+                    "_sentence": s.text,
+                    "explanation": (
+                        f"पुस्तक में लिखा है: “{s.text}”" if lang == "hi" else f"The book states: “{s.text}”"
+                    ),
+                    "misconception": ""
+                    if lang == "hi"
+                    else (
+                        f"“{distractors[0]}” is a term from the book, but it is not the one used in this statement."
+                    ),
+                }
+            )
             break
         return out
 
@@ -518,22 +672,29 @@ class ExtractiveProvider(LLMProvider):
         if len(distractors) < 3:
             return []
         clozed = s.text[: m.start(1)] + BLANK + s.text[m.end(1) :]
-        return [{
-            "question": f"According to {chapter}, which option completes the statement: “{clozed}”",
-            "question_type": "recall",
-            "difficulty": 2,
-            "topic": next((t for t in (terms or []) if re.search(rf"\b{re.escape(t)}\b", s.text, re.I)), "key figures"),
-            "_correct": phrase,
-            "_distractors": distractors[:3],
-            "_pid": s.pid,
-            "_sentence": s.text,
-            "explanation": f"The book states: “{s.text}”",
-            "misconception": "The other options change the quantity the book gives.",
-        }]
+        return [
+            {
+                "question": f"According to {chapter}, which option completes the statement: “{clozed}”",
+                "question_type": "recall",
+                "difficulty": 2,
+                "topic": next(
+                    (t for t in (terms or []) if re.search(rf"\b{re.escape(t)}\b", s.text, re.I)),
+                    "key figures",
+                ),
+                "_correct": phrase,
+                "_distractors": distractors[:3],
+                "_pid": s.pid,
+                "_sentence": s.text,
+                "explanation": f"The book states: “{s.text}”",
+                "misconception": "The other options change the quantity the book gives.",
+            }
+        ]
 
     @staticmethod
     def _number_variants(phrase: str) -> list[str]:
-        nums = re.findall(r"\d+(?:[.,]\d+)?|" + "|".join(sorted(NUMBER_WORDS, key=len, reverse=True)), phrase, re.I)
+        nums = re.findall(
+            r"\d+(?:[.,]\d+)?|" + "|".join(sorted(NUMBER_WORDS, key=len, reverse=True)), phrase, re.I
+        )
         if not nums:
             return []
         variants: list[str] = []
@@ -560,7 +721,9 @@ class ExtractiveProvider(LLMProvider):
                     cand = re.sub(rf"\b{re.escape(first)}\b", NUMBER_WORDS[j], phrase, count=1, flags=re.I)
                     if len(nums) > 1 and nums[1].lower() in NUMBER_WORDS:
                         k = min(len(NUMBER_WORDS) - 1, max(0, NUMBER_WORDS.index(nums[1].lower()) + off))
-                        cand = re.sub(rf"\b{re.escape(nums[1])}\b", NUMBER_WORDS[k], cand, count=1, flags=re.I)
+                        cand = re.sub(
+                            rf"\b{re.escape(nums[1])}\b", NUMBER_WORDS[k], cand, count=1, flags=re.I
+                        )
                     if cand.lower() != phrase.lower() and cand not in variants:
                         variants.append(cand)
         return variants
@@ -581,23 +744,32 @@ class ExtractiveProvider(LLMProvider):
         if len(false_statements) < 3:
             return []
         stem = (
-            f"{chapter} के अनुसार कौन-सा कथन सही है?" if lang == "hi"
+            f"{chapter} के अनुसार कौन-सा कथन सही है?"
+            if lang == "hi"
             else f"Which statement is supported by {chapter}?"
         )
-        return [{
-            "question": stem + ("" if lang == "hi" else f" (Topic: {target})"),
-            "question_type": "comprehension",
-            "difficulty": 3,
-            "topic": target,
-            "_correct": s.text,
-            "_distractors": false_statements,
-            "_pid": s.pid,
-            "_sentence": s.text,
-            "explanation": (f"पुस्तक में लिखा है: “{s.text}”" if lang == "hi" else f"This is what the book states: “{s.text}”"),
-            "misconception": "" if lang == "hi" else (
-                f"The other statements swap “{target}” for a different term, which changes the meaning."
-            ),
-        }]
+        return [
+            {
+                "question": stem + ("" if lang == "hi" else f" (Topic: {target})"),
+                "question_type": "comprehension",
+                "difficulty": 3,
+                "topic": target,
+                "_correct": s.text,
+                "_distractors": false_statements,
+                "_pid": s.pid,
+                "_sentence": s.text,
+                "explanation": (
+                    f"पुस्तक में लिखा है: “{s.text}”"
+                    if lang == "hi"
+                    else f"This is what the book states: “{s.text}”"
+                ),
+                "misconception": ""
+                if lang == "hi"
+                else (
+                    f"The other statements swap “{target}” for a different term, which changes the meaning."
+                ),
+            }
+        ]
 
     # ------------------------------------------------------------------ validation (blind)
     def _task_quiz_question_validator(self, ctx: dict, req: GenerationRequest) -> dict:
@@ -620,7 +792,10 @@ class ExtractiveProvider(LLMProvider):
                 supported.append(opt["key"])
         exactly_one = len(supported) == 1
         expl_quote = re.search(r"“(.*)”", q.get("explanation", ""))
-        explanation_ok = bool(expl_quote and fuzzy_contains(text, expl_quote.group(1), 0.95)) or token_overlap(q.get("explanation", ""), text) >= 0.6
+        explanation_ok = (
+            bool(expl_quote and fuzzy_contains(text, expl_quote.group(1), 0.95))
+            or token_overlap(q.get("explanation", ""), text) >= 0.6
+        )
         detected = detect_language(stem + " " + " ".join(o["text"] for o in options))
         language_ok = detected is None or detected == req.output_language
         return {
@@ -640,10 +815,18 @@ class ExtractiveProvider(LLMProvider):
         q = ctx["question"]
         passages = ctx["passages"]
         correct = next(o["text"] for o in q["options"] if o["key"] == q["correct_key"])
-        best = max(_sentences(passages), key=lambda s: token_overlap(correct + " " + q["question"], s.text), default=None)
+        best = max(
+            _sentences(passages),
+            key=lambda s: token_overlap(correct + " " + q["question"], s.text),
+            default=None,
+        )
         if best is None:
             return {"explanation": "", "misconception": "", "evidence_ids": []}
-        return {"explanation": f"The book states: “{best.text}”", "misconception": "", "evidence_ids": [best.pid]}
+        return {
+            "explanation": f"The book states: “{best.text}”",
+            "misconception": "",
+            "evidence_ids": [best.pid],
+        }
 
     # ------------------------------------------------------------------ misc tasks
     def _task_chapter_detector(self, ctx: dict, req: GenerationRequest) -> dict:
@@ -665,5 +848,7 @@ class ExtractiveProvider(LLMProvider):
                 verdict = "partial"
             else:
                 verdict = "unsupported"
-            judgements.append({"claim_index": i, "verdict": verdict, "misattributed": False, "reason": "lexical judge"})
+            judgements.append(
+                {"claim_index": i, "verdict": verdict, "misattributed": False, "reason": "lexical judge"}
+            )
         return {"judgements": judgements}

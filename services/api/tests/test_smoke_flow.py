@@ -10,7 +10,9 @@ def test_guest_upload_to_summary_and_quiz(guest):
     chapters = guest.get(f"/api/v1/books/{book['id']}/chapters").json()["items"]
     assert [c["title"] for c in chapters][0].startswith("Chapter 1")
     assert len(chapters) == 4
-    r = guest.post(f"/api/v1/books/{book['id']}/summaries", json={"chapter_id": chapters[0]["id"], "depth": "balanced"})
+    r = guest.post(
+        f"/api/v1/books/{book['id']}/summaries", json={"chapter_id": chapters[0]["id"], "depth": "balanced"}
+    )
     assert r.status_code in (200, 202), r.text
     sid = r.json()["summary"]["id"]
     s = guest.get(f"/api/v1/books/{book['id']}/summaries/{sid}").json()["summary"]

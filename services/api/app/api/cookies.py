@@ -8,7 +8,13 @@ from app.core.config import get_settings
 
 def set_cookie(response: Response, name: str, value: str, max_age: int) -> None:
     response.set_cookie(
-        name, value, max_age=max_age, httponly=True, secure=get_settings().is_production, samesite="lax", path="/"
+        name,
+        value,
+        max_age=max_age,
+        httponly=True,
+        secure=get_settings().is_production,
+        samesite="lax",
+        path="/",
     )
 
 

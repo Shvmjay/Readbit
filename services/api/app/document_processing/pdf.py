@@ -21,13 +21,17 @@ from app.document_processing.ocr import OCREngine, get_ocr_engine
 from app.document_processing.text import collapse_whitespace, normalize_text
 from app.document_processing.types import Block, ExtractedDocument, TocEntry
 
-PAGE_NUMBER_LINE = re.compile(r"^\s*(?:page\s+)?(?:\d{1,4}|[ivxlcdm]{1,7})(?:\s+of\s+\d+)?\s*$", re.IGNORECASE)
+PAGE_NUMBER_LINE = re.compile(
+    r"^\s*(?:page\s+)?(?:\d{1,4}|[ivxlcdm]{1,7})(?:\s+of\s+\d+)?\s*$", re.IGNORECASE
+)
 CHAPTER_LINE = re.compile(
     r"^(?:chapter|chap\.|part|book|section|prologue|epilogue|introduction|conclusion|preface|afterword|appendix"
     r"|अध्याय|भाग)\b",
     re.IGNORECASE,
 )
-JUNK_TITLES = re.compile(r"^(untitled|microsoft word|document\d*|\s*)$|\.(docx?|pdf|indd|tex)$", re.IGNORECASE)
+JUNK_TITLES = re.compile(
+    r"^(untitled|microsoft word|document\d*|\s*)$|\.(docx?|pdf|indd|tex)$", re.IGNORECASE
+)
 MIN_TEXT_CHARS = 25
 
 
@@ -99,7 +103,9 @@ def _page_lines(page) -> list[tuple[str, float]]:
                 lines.append((line, cur_sizes.most_common(1)[0][0] if cur_sizes else 0.0))
                 cur_text, cur_sizes = [], Counter()
     if cur_text:
-        lines.append((normalize_text("".join(cur_text)), cur_sizes.most_common(1)[0][0] if cur_sizes else 0.0))
+        lines.append(
+            (normalize_text("".join(cur_text)), cur_sizes.most_common(1)[0][0] if cur_sizes else 0.0)
+        )
     # Re-join hyphenated line breaks that normalize_text could not see across lines.
     joined: list[tuple[str, float]] = []
     for text, size in lines:
@@ -138,7 +144,9 @@ def extract_pdf(data: bytes, ocr: OCREngine | None = None) -> ExtractedDocument:
         raise
     except (PdfReadError, Exception) as exc:  # noqa: BLE001
         raise AppError(
-            ErrorCode.CORRUPTED_DOCUMENT, "This PDF appears to be damaged and could not be opened.", status_code=422
+            ErrorCode.CORRUPTED_DOCUMENT,
+            "This PDF appears to be damaged and could not be opened.",
+            status_code=422,
         ) from exc
 
     if n_pages == 0:
@@ -221,16 +229,26 @@ def extract_pdf(data: bytes, ocr: OCREngine | None = None) -> ExtractedDocument:
             if para:
                 txt = collapse_whitespace(" ".join(para))
                 if txt:
-                    doc.blocks.append(Block(txt, "paragraph", page_index=idx, page_label=label, confidence=page_conf[idx]))
+                    doc.blocks.append(
+                        Block(txt, "paragraph", page_index=idx, page_label=label, confidence=page_conf[idx])
+                    )
                 para.clear()
 
         def add_heading(text: str, level: int) -> None:
             last = doc.blocks[-1] if doc.blocks else None
             # A wrapped heading continues on the next line with the same size: merge it.
-            if last is not None and last.kind == "heading" and last.page_index == idx and last._size == size and not para:
+            if (
+                last is not None
+                and last.kind == "heading"
+                and last.page_index == idx
+                and last._size == size
+                and not para
+            ):
                 last.text = collapse_whitespace(last.text + " " + text)
                 return
-            blk = Block(text, "heading", level=level, page_index=idx, page_label=label, confidence=page_conf[idx])
+            blk = Block(
+                text, "heading", level=level, page_index=idx, page_label=label, confidence=page_conf[idx]
+            )
             blk._size = size  # type: ignore[attr-defined]
             doc.blocks.append(blk)
 
@@ -253,7 +271,7 @@ def extract_pdf(data: bytes, ocr: OCREngine | None = None) -> ExtractedDocument:
                 add_heading(s_line, level)
                 continue
             para.append(s_line)
-            ends_sentence = s_line[-1:] in ".!?:\"”’)" or s_line.endswith("।")
+            ends_sentence = s_line[-1:] in '.!?:"”’)' or s_line.endswith("।")
             if ends_sentence and len(s_line) < 0.7 * typical:
                 flush()
         flush()
@@ -266,7 +284,9 @@ def extract_pdf(data: bytes, ocr: OCREngine | None = None) -> ExtractedDocument:
             pages=[p + 1 for p in doc.unreadable_pages[:50]],
         )
     if doc.ocr_pages:
-        doc.warn("ocr_used", f"{doc.ocr_pages} page(s) were read with OCR; minor recognition errors are possible.")
+        doc.warn(
+            "ocr_used", f"{doc.ocr_pages} page(s) were read with OCR; minor recognition errors are possible."
+        )
     doc.quality = _quality(doc, n_pages)
     return doc
 

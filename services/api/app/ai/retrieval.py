@@ -77,7 +77,9 @@ def retrieve(
         return {i: r for r, i in enumerate(order)}
 
     lr, sr = ranks(lexical), ranks(semantic)
-    fused = [(1 / (60 + lr[i]) + 1 / (60 + sr[i]), i) for i in range(n) if lexical[i] > 0 or semantic[i] > 0.05]
+    fused = [
+        (1 / (60 + lr[i]) + 1 / (60 + sr[i]), i) for i in range(n) if lexical[i] > 0 or semantic[i] > 0.05
+    ]
     fused.sort(reverse=True)
     return [Retrieved(chunks[i], s, lexical[i], semantic[i]) for s, i in fused[:k]]
 
@@ -99,13 +101,17 @@ def render_passages(db: Session, chunks: list[DocumentChunk]) -> tuple[list[dict
             loc.append(c.section_title)
         if c.page_label_start or c.page_start is not None:
             loc.append(f"page {c.page_label_start or (c.page_start or 0) + 1}")
-        structured.append({"id": pid, "text": c.text_content, "section": c.section_title, "chapter_title": ch_title})
+        structured.append(
+            {"id": pid, "text": c.text_content, "section": c.section_title, "chapter_title": ch_title}
+        )
         body = c.text_content.replace("</passage", "&lt;/passage")
         lines.append(f'<passage id="{pid}" location="{" · ".join(loc)}">\n{body}\n</passage>')
     return structured, "\n".join(lines)
 
 
-def token_budget_windows(chunks: list[DocumentChunk], max_tokens: int | None = None) -> list[list[DocumentChunk]]:
+def token_budget_windows(
+    chunks: list[DocumentChunk], max_tokens: int | None = None
+) -> list[list[DocumentChunk]]:
     """Split chunks into windows that fit a prompt budget (used for hierarchical summarization)."""
     limit = max_tokens or max(3000, get_settings().max_generation_tokens)
     windows: list[list[DocumentChunk]] = [[]]

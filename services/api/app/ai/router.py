@@ -80,7 +80,9 @@ def get_provider(name: str) -> LLMProvider:
         elif name == "extractive":
             _provider_cache[name] = ExtractiveProvider()
         else:
-            raise AppError(ErrorCode.AI_PROVIDER_UNAVAILABLE, "The AI provider is not configured.", status_code=503)
+            raise AppError(
+                ErrorCode.AI_PROVIDER_UNAVAILABLE, "The AI provider is not configured.", status_code=503
+            )
     return _provider_cache[name]
 
 
@@ -123,7 +125,11 @@ class ModelRouter:
 
     def spent_today(self) -> float:
         start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-        total = self.db.scalar(select(func.coalesce(func.sum(AIExecution.estimated_cost), 0.0)).where(AIExecution.created_at >= start))
+        total = self.db.scalar(
+            select(func.coalesce(func.sum(AIExecution.estimated_cost), 0.0)).where(
+                AIExecution.created_at >= start
+            )
+        )
         return float(total or 0.0)
 
     def supports_language(self, task: str, output_language: str, source_language: str | None) -> bool:
@@ -206,18 +212,28 @@ class ModelRouter:
                     )
                 except jsonschema.ValidationError as exc:
                     last_error = exc
-                    self._record_failure(task, template.version, model, started, book_id, actor, "schema_invalid")
+                    self._record_failure(
+                        task, template.version, model, started, book_id, actor, "schema_invalid"
+                    )
                     log.warning("ai output failed schema", extra={"task": task, "model": model})
                     break  # escalate to the next model rather than repeating the same one
                 except ProviderError as exc:
                     last_error = exc
                     self._record_failure(task, template.version, model, started, book_id, actor, exc.category)
-                    log.warning("ai provider error", extra={"task": task, "model": model, "category": exc.category})
+                    log.warning(
+                        "ai provider error", extra={"task": task, "model": model, "category": exc.category}
+                    )
                     if not exc.retryable:
                         break
                     if attempt + 1 < attempts:
                         time.sleep(min(8.0, 0.5 * (2**attempt)))
-        if isinstance(last_error, ProviderError) and last_error.category in ("rate_limited", "timeout", "connection", "api_status", "auth"):
+        if isinstance(last_error, ProviderError) and last_error.category in (
+            "rate_limited",
+            "timeout",
+            "connection",
+            "api_status",
+            "auth",
+        ):
             raise AppError(
                 ErrorCode.AI_PROVIDER_UNAVAILABLE,
                 "The AI service is temporarily unavailable. Your book and progress are safe; please retry shortly.",
@@ -229,7 +245,9 @@ class ModelRouter:
             status_code=502,
         )
 
-    def _record(self, task, version, result: GenerationResult, started, book_id, actor, success: bool) -> None:
+    def _record(
+        self, task, version, result: GenerationResult, started, book_id, actor, success: bool
+    ) -> None:
         self.db.add(
             AIExecution(
                 book_id=book_id,
@@ -264,5 +282,3 @@ class ModelRouter:
             )
         )
         self.db.flush()
-
-

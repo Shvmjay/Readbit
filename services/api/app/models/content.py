@@ -70,7 +70,9 @@ class Annotation(IdMixin, TimestampMixin, Base):
 
     book_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"))
     owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("guest_sessions.id", ondelete="CASCADE"))
+    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("guest_sessions.id", ondelete="CASCADE")
+    )
     annotation_type: Mapped[str] = mapped_column(String(16))
     # {"kind": "passage"|"summary", "chunk_id"?, "chapter_id"?, "summary_id"?, "section_key"?, "start"?, "end"?}
     source_location: Mapped[dict] = mapped_column(JSONType, default=dict)
@@ -90,7 +92,9 @@ class ReadingState(IdMixin, Base):
 
     book_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"), index=True)
     owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("guest_sessions.id", ondelete="CASCADE"))
+    guest_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("guest_sessions.id", ondelete="CASCADE")
+    )
     actor_key: Mapped[str] = mapped_column(String(40))  # "u:<uuid>" or "g:<uuid>"; NULL-safe uniqueness
     last_view: Mapped[str] = mapped_column(String(16), default="summary")  # summary | source
     last_chapter_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("chapters.id", ondelete="SET NULL"))

@@ -13,7 +13,9 @@ router = APIRouter(prefix="/api/v1", tags=["analytics"])
 
 
 @router.post("/events", status_code=202, summary="Record an allowlisted, content-free client analytics event")
-def client_event(body: ClientEvent, db: Session = Depends(db_session), actor: CurrentActor | None = Depends(optional_actor)) -> dict:
+def client_event(
+    body: ClientEvent, db: Session = Depends(db_session), actor: CurrentActor | None = Depends(optional_actor)
+) -> dict:
     if body.name not in CLIENT_EVENTS:
         return {"accepted": False}
     if actor is not None:
@@ -23,7 +25,15 @@ def client_event(body: ClientEvent, db: Session = Depends(db_session), actor: Cu
         from app.models.books import Book
 
         book = db.get(Book, body.book_id)
-        book_id = book.id if book is not None and ((actor.user and book.owner_user_id == actor.user_id) or (actor.guest_id and book.guest_session_id == actor.guest_id)) else None
+        book_id = (
+            book.id
+            if book is not None
+            and (
+                (actor.user and book.owner_user_id == actor.user_id)
+                or (actor.guest_id and book.guest_session_id == actor.guest_id)
+            )
+            else None
+        )
     track(db, body.name, actor.key if actor else None, book_id, **body.properties)
     db.commit()
     return {"accepted": True}

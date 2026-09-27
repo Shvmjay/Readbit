@@ -69,6 +69,10 @@ def run_retention_cleanup(db: Session) -> dict:
     db.execute(delete(AuthSession).where(AuthSession.expires_at <= now - timedelta(days=7)))
     db.execute(delete(PasswordResetToken).where(PasswordResetToken.expires_at <= now - timedelta(days=1)))
     db.commit()
-    result = {"guests_expired": len(expired_guests), "books_removed": books_removed, "files_removed": files_removed}
+    result = {
+        "guests_expired": len(expired_guests),
+        "books_removed": books_removed,
+        "files_removed": files_removed,
+    }
     log.info("retention cleanup", extra=result)
     return result

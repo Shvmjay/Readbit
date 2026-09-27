@@ -66,7 +66,11 @@ def tokenize(text: str) -> list[str]:
 
 
 def content_words(text: str) -> list[str]:
-    return [t for t in tokenize(text) if t not in STOPWORDS and (len(t) > 2 or not t.isascii()) and not t.isdigit()]
+    return [
+        t
+        for t in tokenize(text)
+        if t not in STOPWORDS and (len(t) > 2 or not t.isascii()) and not t.isdigit()
+    ]
 
 
 def word_count(text: str) -> int:

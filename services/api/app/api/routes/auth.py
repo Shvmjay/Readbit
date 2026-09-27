@@ -20,10 +20,17 @@ def _client_key(request: Request) -> str:
 
 
 @router.post("/guest", summary="Start a temporary guest session")
-def start_guest(body: GuestStart, response: Response, request: Request, db: Session = Depends(db_session),
-                actor: CurrentActor | None = Depends(optional_actor)) -> dict:
+def start_guest(
+    body: GuestStart,
+    response: Response,
+    request: Request,
+    db: Session = Depends(db_session),
+    actor: CurrentActor | None = Depends(optional_actor),
+) -> dict:
     if not body.accepted_privacy:
-        raise AppError(ErrorCode.VALIDATION_ERROR, "Please acknowledge the privacy notice to continue.", status_code=422)
+        raise AppError(
+            ErrorCode.VALIDATION_ERROR, "Please acknowledge the privacy notice to continue.", status_code=422
+        )
     if actor is not None and actor.guest is not None and actor.user is None:
         return {"guest": True, "expires_at": actor.guest.expires_at.isoformat(), "resumed": True}
     enforce(_client_key(request), "guest", limit=20, window=3600)
@@ -33,8 +40,13 @@ def start_guest(body: GuestStart, response: Response, request: Request, db: Sess
 
 
 @router.post("/register", status_code=201, summary="Create an account (moves any guest books into it)")
-def register(body: RegisterBody, response: Response, request: Request, db: Session = Depends(db_session),
-             actor: CurrentActor | None = Depends(optional_actor)) -> dict:
+def register(
+    body: RegisterBody,
+    response: Response,
+    request: Request,
+    db: Session = Depends(db_session),
+    actor: CurrentActor | None = Depends(optional_actor),
+) -> dict:
     enforce(_client_key(request), "register", limit=10, window=3600)
     guest = actor.guest if actor and actor.user is None else None
     user = auth_service.register(db, body.email, body.password, body.display_name, body.language, guest)
@@ -45,8 +57,13 @@ def register(body: RegisterBody, response: Response, request: Request, db: Sessi
 
 
 @router.post("/login", summary="Sign in")
-def login(body: LoginBody, response: Response, request: Request, db: Session = Depends(db_session),
-          actor: CurrentActor | None = Depends(optional_actor)) -> dict:
+def login(
+    body: LoginBody,
+    response: Response,
+    request: Request,
+    db: Session = Depends(db_session),
+    actor: CurrentActor | None = Depends(optional_actor),
+) -> dict:
     enforce(_client_key(request) + ":" + body.email.lower(), "login", limit=10, window=900)
     guest = actor.guest if actor and actor.user is None else None
     user = auth_service.login(db, body.email, body.password, guest)

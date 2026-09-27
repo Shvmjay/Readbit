@@ -87,7 +87,12 @@ def run_ingest_job(job_id: uuid.UUID) -> None:
         except Exception:  # noqa: BLE001
             db.rollback()
             log.exception("ingest crashed", extra={"job_id": str(job_id)})
-            _fail(db, job.id, ErrorCode.INTERNAL, "Something went wrong while processing this book. You can retry.")
+            _fail(
+                db,
+                job.id,
+                ErrorCode.INTERNAL,
+                "Something went wrong while processing this book. You can retry.",
+            )
 
 
 def _fail(db: Session, job_id: uuid.UUID, code: ErrorCode, message: str) -> None:
@@ -109,10 +114,14 @@ def _pipeline(db: Session, job: ProcessingJob, book: Book) -> None:
     t = st.enter("validating")
     source = book.source_file
     if source is None or source.deleted_at is not None:
-        raise AppError(ErrorCode.STORAGE_FAILURE, "The uploaded file is no longer available. Please upload it again.")
+        raise AppError(
+            ErrorCode.STORAGE_FAILURE, "The uploaded file is no longer available. Please upload it again."
+        )
     data = get_storage().get(source.storage_key)
     if sha256_hex(data) != source.checksum:
-        raise AppError(ErrorCode.CORRUPTED_DOCUMENT, "The stored file failed an integrity check. Please upload it again.")
+        raise AppError(
+            ErrorCode.CORRUPTED_DOCUMENT, "The stored file failed an integrity check. Please upload it again."
+        )
     st.done("validating", t)
 
     t = st.enter("extracting")
@@ -125,7 +134,9 @@ def _pipeline(db: Session, job: ProcessingJob, book: Book) -> None:
                 "This looks like a scanned book without a text layer, and OCR is not enabled on this server. "
                 "Try a version of the book with selectable text.",
             )
-        raise AppError(ErrorCode.EXTRACTION_QUALITY_LOW, "We could not find enough readable text in this file.")
+        raise AppError(
+            ErrorCode.EXTRACTION_QUALITY_LOW, "We could not find enough readable text in this file."
+        )
     if doc.quality < 0.5:
         doc.warn("extraction_quality_low", "Parts of this document may not have been extracted accurately.")
     st.done("extracting", t)
@@ -208,12 +219,18 @@ def _pipeline(db: Session, job: ProcessingJob, book: Book) -> None:
         ch.ordinal = -ch.ordinal
     book.chapter_count = len(chapters)
     if not chapters:
-        raise AppError(ErrorCode.EXTRACTION_QUALITY_LOW, "We could not find enough readable text in this file.")
+        raise AppError(
+            ErrorCode.EXTRACTION_QUALITY_LOW, "We could not find enough readable text in this file."
+        )
     st.done("chunking", t)
 
     t = st.enter("indexing")
     embedder = get_embedder()
-    rows = list(db.scalars(select(DocumentChunk).where(DocumentChunk.book_id == book.id).order_by(DocumentChunk.ordinal)))
+    rows = list(
+        db.scalars(
+            select(DocumentChunk).where(DocumentChunk.book_id == book.id).order_by(DocumentChunk.ordinal)
+        )
+    )
     batch = 64
     for i in range(0, len(rows), batch):
         part = rows[i : i + batch]
@@ -225,9 +242,14 @@ def _pipeline(db: Session, job: ProcessingJob, book: Book) -> None:
     transition(book, "ready")
     job.stage, job.progress_percent, job.status = "ready", 100, "succeeded"
     job.completed_at = datetime.now(UTC)
-    track(db, "document_processing_completed", None, book.id, format=book.file_format, count=book.chapter_count)
+    track(
+        db, "document_processing_completed", None, book.id, format=book.file_format, count=book.chapter_count
+    )
     db.commit()
-    log.info("ingest complete", extra={"book_id": str(book.id), "chapters": book.chapter_count, "chunks": len(rows)})
+    log.info(
+        "ingest complete",
+        extra={"book_id": str(book.id), "chapters": book.chapter_count, "chunks": len(rows)},
+    )
 
 
 def _try_model_structure(db: Session, book: Book, doc: ExtractedDocument, specs, confidence):
@@ -236,7 +258,9 @@ def _try_model_structure(db: Session, book: Book, doc: ExtractedDocument, specs,
     if router.is_offline:
         return specs, confidence
     candidates = [
-        (i, b.text) for i, b in enumerate(doc.blocks) if len(b.text) <= 100 and (b.kind == "heading" or len(b.text.split()) <= 10)
+        (i, b.text)
+        for i, b in enumerate(doc.blocks)
+        if len(b.text) <= 100 and (b.kind == "heading" or len(b.text.split()) <= 10)
     ][:300]
     if len(candidates) < 2:
         return specs, confidence

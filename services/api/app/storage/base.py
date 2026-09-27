@@ -55,7 +55,9 @@ class LocalStorage(ObjectStorage):
     def get(self, key: str) -> bytes:
         path = self._path(key)
         if not path.exists():
-            raise AppError(ErrorCode.STORAGE_FAILURE, "The stored file is no longer available.", status_code=410)
+            raise AppError(
+                ErrorCode.STORAGE_FAILURE, "The stored file is no longer available.", status_code=410
+            )
         return path.read_bytes()
 
     def delete(self, key: str) -> None:
@@ -86,16 +88,24 @@ class S3Storage(ObjectStorage):
     def put(self, key: str, data: bytes, content_type: str) -> None:
         try:
             self.client.put_object(
-                Bucket=self.bucket, Key=key, Body=data, ContentType=content_type, ServerSideEncryption="AES256"
+                Bucket=self.bucket,
+                Key=key,
+                Body=data,
+                ContentType=content_type,
+                ServerSideEncryption="AES256",
             )
         except Exception as exc:  # noqa: BLE001
-            raise AppError(ErrorCode.STORAGE_FAILURE, "We could not store your file. Please retry.", status_code=503) from exc
+            raise AppError(
+                ErrorCode.STORAGE_FAILURE, "We could not store your file. Please retry.", status_code=503
+            ) from exc
 
     def get(self, key: str) -> bytes:
         try:
             return self.client.get_object(Bucket=self.bucket, Key=key)["Body"].read()
         except Exception as exc:  # noqa: BLE001
-            raise AppError(ErrorCode.STORAGE_FAILURE, "The stored file could not be read.", status_code=503) from exc
+            raise AppError(
+                ErrorCode.STORAGE_FAILURE, "The stored file could not be read.", status_code=503
+            ) from exc
 
     def delete(self, key: str) -> None:
         self.client.delete_object(Bucket=self.bucket, Key=key)

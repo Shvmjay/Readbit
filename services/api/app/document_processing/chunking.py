@@ -33,7 +33,9 @@ def chapter_text_units(doc: ExtractedDocument, spec: ChapterSpec) -> list[tuple[
     return units
 
 
-def chunk_chapter(doc: ExtractedDocument, spec: ChapterSpec, chapter_index: int) -> tuple[list[ChunkSpec], str]:
+def chunk_chapter(
+    doc: ExtractedDocument, spec: ChapterSpec, chapter_index: int
+) -> tuple[list[ChunkSpec], str]:
     """Return chunks plus the chapter's canonical text (chunk offsets index into it)."""
     chunks: list[ChunkSpec] = []
     canonical_parts: list[str] = []

@@ -59,7 +59,9 @@ def enqueue(job_type: str, job_id: uuid.UUID) -> None:
     global _executor
     with _lock:
         if _executor is None:
-            _executor = ThreadPoolExecutor(max_workers=max(1, get_settings().worker_concurrency), thread_name_prefix="rb-job")
+            _executor = ThreadPoolExecutor(
+                max_workers=max(1, get_settings().worker_concurrency), thread_name_prefix="rb-job"
+            )
     _executor.submit(run_job, job_type, job_id)
 
 

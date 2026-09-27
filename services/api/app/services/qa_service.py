@@ -18,12 +18,22 @@ from app.services.summary_service import book_output_language
 MAX_QUESTION_CHARS = 1000
 
 
-def ask(db: Session, actor: CurrentActor, book: Book, question: str, *, chapter_id: uuid.UUID | None, language: str | None) -> dict:
+def ask(
+    db: Session,
+    actor: CurrentActor,
+    book: Book,
+    question: str,
+    *,
+    chapter_id: uuid.UUID | None,
+    language: str | None,
+) -> dict:
     question = question.strip()
     if not question:
         raise AppError(ErrorCode.VALIDATION_ERROR, "Please enter a question.", status_code=422)
     if len(question) > MAX_QUESTION_CHARS:
-        raise AppError(ErrorCode.VALIDATION_ERROR, "Questions are limited to 1,000 characters.", status_code=422)
+        raise AppError(
+            ErrorCode.VALIDATION_ERROR, "Questions are limited to 1,000 characters.", status_code=422
+        )
     if book.processing_status != "ready":
         raise AppError(ErrorCode.NOT_READY, "This book is still being processed.", status_code=409)
     scope_line = "Scope: the whole book."
@@ -43,7 +53,12 @@ def ask(db: Session, actor: CurrentActor, book: Book, question: str, *, chapter_
     passages, rendered = render_passages(db, chunks)
     result = router.generate(
         "book_qa",
-        variables={"book_title": book.title, "question": question, "passages": rendered, "scope_line": scope_line},
+        variables={
+            "book_title": book.title,
+            "question": question,
+            "passages": rendered,
+            "scope_line": scope_line,
+        },
         context={"question": question, "passages": passages},
         output_language=lang,
         source_language=book.detected_language,
@@ -56,9 +71,13 @@ def ask(db: Session, actor: CurrentActor, book: Book, question: str, *, chapter_
     pids = [p for p in dict.fromkeys(data.get("evidence_ids", [])) if p in allowed]
     if not data.get("answerable") or not data.get("answer", "").strip() or not pids:
         track(db, "book_question_asked", actor.key, book.id, answerable=False)
-        reason = data.get("unanswerable_reason") or "The book does not provide enough information to answer this."
+        reason = (
+            data.get("unanswerable_reason") or "The book does not provide enough information to answer this."
+        )
         if data.get("answerable") and not pids:
-            reason = "An answer was drafted but could not be tied to passages in your book, so it was withheld."
+            reason = (
+                "An answer was drafted but could not be tied to passages in your book, so it was withheld."
+            )
         db.commit()
         return _abstain(reason, engine)
     citations, scores = [], []
@@ -83,4 +102,11 @@ def ask(db: Session, actor: CurrentActor, book: Book, question: str, *, chapter_
 
 
 def _abstain(reason: str, engine: dict) -> dict:
-    return {"answerable": False, "answer": None, "confidence": "low", "citations": [], "unanswerable_reason": reason, "engine": engine}
+    return {
+        "answerable": False,
+        "answer": None,
+        "confidence": "low",
+        "citations": [],
+        "unanswerable_reason": reason,
+        "engine": engine,
+    }

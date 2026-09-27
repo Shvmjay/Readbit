@@ -12,7 +12,7 @@ from typing import Literal
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-INSECURE_DEV_SECRET = "dev-insecure-secret-change-me-0123456789abcdef"
+INSECURE_DEV_SECRET = "dev-insecure-secret-change-me-0123456789abcdef"  # noqa: S105 - rejected in production
 
 
 class Settings(BaseSettings):

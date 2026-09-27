@@ -37,10 +37,14 @@ def ready(db: Session = Depends(db_session)):
     except Exception:  # noqa: BLE001
         checks["prompts"] = "missing"
     ok = checks["database"] == "ok" and checks["storage"] == "ok" and checks["prompts"] != "missing"
-    return JSONResponse({"status": "ready" if ok else "degraded", "checks": checks}, status_code=200 if ok else 503)
+    return JSONResponse(
+        {"status": "ready" if ok else "degraded", "checks": checks}, status_code=200 if ok else 503
+    )
 
 
-@router.get("/api/v1/meta", tags=["meta"], summary="Public capabilities: languages, AI engine mode and limits")
+@router.get(
+    "/api/v1/meta", tags=["meta"], summary="Public capabilities: languages, AI engine mode and limits"
+)
 def meta(db: Session = Depends(db_session)) -> dict:
     s = get_settings()
     r = ModelRouter(db)
@@ -50,7 +54,9 @@ def meta(db: Session = Depends(db_session)) -> dict:
             "provider": r.provider_name,
             "mode": "extractive" if r.is_offline else "generative",
             "can_translate": not r.is_offline,
-            "question_types": ["recall", "comprehension"] if r.is_offline else ["recall", "comprehension", "application", "inference"],
+            "question_types": ["recall", "comprehension"]
+            if r.is_offline
+            else ["recall", "comprehension", "application", "inference"],
         },
         "limits": {
             "max_upload_size_mb": s.max_upload_size_mb,

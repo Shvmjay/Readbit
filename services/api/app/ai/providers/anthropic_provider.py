@@ -47,7 +47,9 @@ class AnthropicProvider(LLMProvider):
             raise ProviderError("bad request", retryable=False, category="bad_request") from exc
         except anthropic.APIStatusError as exc:
             retryable = exc.status_code >= 500 or exc.status_code in (408, 409, 429, 529)
-            raise ProviderError(f"status {exc.status_code}", retryable=retryable, category="api_status") from exc
+            raise ProviderError(
+                f"status {exc.status_code}", retryable=retryable, category="api_status"
+            ) from exc
 
         if message.stop_reason == "refusal":
             raise ProviderError("model declined the request", retryable=False, category="refusal")

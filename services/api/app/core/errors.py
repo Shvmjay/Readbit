@@ -13,7 +13,7 @@ class ErrorCode(StrEnum):
     UNSUPPORTED_FILE = "unsupported_file"
     FILE_TOO_LARGE = "file_too_large"
     CORRUPTED_DOCUMENT = "corrupted_document"
-    PASSWORD_PROTECTED = "password_protected"
+    PASSWORD_PROTECTED = "password_protected"  # noqa: S105 - error code, not a secret
     OCR_UNAVAILABLE = "ocr_unavailable"
     EXTRACTION_QUALITY_LOW = "extraction_quality_low"
     CHAPTER_DETECTION_UNCERTAIN = "chapter_detection_uncertain"
