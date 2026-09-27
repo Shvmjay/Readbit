@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.cookies import clear_auth_cookies, set_guest_cookie, set_session_cookie
 from app.api.deps import GUEST_COOKIE, SESSION_COOKIE, db_session, optional_actor
 from app.api.serializers import serialize_user
+from app.core.config import get_settings
 from app.core.errors import AppError, ErrorCode
 from app.core.ratelimit import enforce
 from app.schemas.api import GuestStart, LoginBody, RegisterBody, ResetBody, ResetRequestBody
@@ -16,6 +17,10 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
 def _client_key(request: Request) -> str:
+    if get_settings().trust_proxy_headers:
+        forwarded = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        if forwarded:
+            return forwarded
     return request.client.host if request.client else "unknown"
 
 

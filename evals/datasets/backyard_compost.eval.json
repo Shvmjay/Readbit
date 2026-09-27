@@ -1,0 +1,22 @@
+{
+  "book": "backyard_compost",
+  "fixtures": ["backyard_compost.epub", "backyard_compost.pdf"],
+  "language": "en",
+  "chapters": [
+    {"title": "Chapter 1: What Compost Needs", "key_facts": ["browns", "greens", "three parts", "wrung-out sponge"]},
+    {"title": "Chapter 2: Heat and Troubleshooting", "key_facts": ["55 and 65 degrees", "one cubic metre", "rotten eggs", "meat"]},
+    {"title": "Chapter 3: Using Finished Compost", "key_facts": ["forest soil", "four weeks", "two to five centimetres"]}
+  ],
+  "answerable": [
+    {"question": "What ratio of browns to greens does the handbook recommend?", "expect_any": ["three parts browns"], "evidence_contains": "three parts"},
+    {"question": "What temperature can the centre of a hot compost pile reach?", "expect_any": ["55 and 65"], "evidence_contains": "55 and 65"},
+    {"question": "How long should finished compost cure?", "expect_any": ["four weeks"], "evidence_contains": "cure"},
+    {"question": "What does a smell of rotten eggs mean for the compost pile?", "expect_any": ["lacks air"], "evidence_contains": "rotten eggs"},
+    {"question": "Why should meat and dairy be kept out of a home compost pile?", "expect_any": ["rodents"], "evidence_contains": "meat"}
+  ],
+  "unanswerable": [
+    "What is the best pesticide for roses?",
+    "Who invented the steam engine?",
+    "How much does a bag of fertiliser cost?"
+  ]
+}

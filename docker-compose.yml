@@ -1,0 +1,100 @@
+# Local development stack: PostgreSQL + pgvector, Redis, MinIO (S3-compatible), API, Celery worker, web.
+#   cp .env.example .env && docker compose up --build
+# Web: http://localhost:3000 · API docs: http://localhost:8000/docs · MinIO console: http://localhost:9001
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: readbit
+      POSTGRES_PASSWORD: readbit-dev-only
+      POSTGRES_DB: readbit
+    ports: ["5432:5432"]
+    volumes: [db-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U readbit"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: readbit
+      MINIO_ROOT_PASSWORD: readbit-dev-only
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio-data:/data]
+
+  minio-setup:
+    image: minio/mc:latest
+    depends_on: [minio]
+    entrypoint: >
+      sh -c "sleep 3 && mc alias set local http://minio:9000 readbit readbit-dev-only &&
+             mc mb --ignore-existing local/readbit-private && mc anonymous set none local/readbit-private"
+
+  api:
+    build: { context: ., dockerfile: infra/docker/api.Dockerfile, target: base }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://readbit:readbit-dev-only@db:5432/readbit
+      REDIS_URL: redis://redis:6379/0
+      JOB_BACKEND: celery
+      STORAGE_PROVIDER: s3
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_BUCKET: readbit-private
+      STORAGE_ACCESS_KEY: readbit
+      STORAGE_SECRET_KEY: readbit-dev-only
+      TRUST_PROXY_HEADERS: "true"
+    ports: ["8000:8000"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio-setup: { condition: service_completed_successfully }
+
+  worker:
+    build: { context: ., dockerfile: infra/docker/api.Dockerfile, target: worker }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://readbit:readbit-dev-only@db:5432/readbit
+      REDIS_URL: redis://redis:6379/0
+      JOB_BACKEND: celery
+      STORAGE_PROVIDER: s3
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_BUCKET: readbit-private
+      STORAGE_ACCESS_KEY: readbit
+      STORAGE_SECRET_KEY: readbit-dev-only
+      OCR_PROVIDER: tesseract
+    depends_on: [api]
+
+  beat:
+    build: { context: ., dockerfile: infra/docker/api.Dockerfile, target: base }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://readbit:readbit-dev-only@db:5432/readbit
+      REDIS_URL: redis://redis:6379/0
+      JOB_BACKEND: celery
+      STORAGE_PROVIDER: s3
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_BUCKET: readbit-private
+      STORAGE_ACCESS_KEY: readbit
+      STORAGE_SECRET_KEY: readbit-dev-only
+    command: ["celery", "-A", "app.workers.celery_app", "beat", "--loglevel", "INFO"]
+    depends_on: [api]
+
+  web:
+    build: { context: ., dockerfile: infra/docker/web.Dockerfile }
+    environment:
+      API_URL: http://api:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+volumes:
+  db-data:
+  minio-data:

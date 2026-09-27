@@ -1,0 +1,23 @@
+{
+  "version": "2026-09-27.1",
+  "description": "Release gates for curated evaluation. Structural and safety gates are absolute; semantic thresholds were set from the first labelled baseline run (see docs/AI_GROUNDING.md) and may only be lowered with an approved decision record.",
+  "gates": {
+    "structure.chapter_title_accuracy": {"min": 0.95},
+    "summary.citations_resolvable": {"min": 1.0},
+    "summary.claims_with_evidence": {"min": 1.0},
+    "summary.citation_precision": {"min": 0.9},
+    "summary.unsupported_claim_rate": {"max": 0.05},
+    "summary.book_chapter_coverage": {"min": 1.0},
+    "summary.key_fact_recall_comprehensive": {"min": 0.6},
+    "summary.language_fidelity": {"min": 1.0},
+    "qa.answer_accuracy": {"min": 0.6},
+    "qa.evidence_recall": {"min": 0.6},
+    "qa.abstention_recall": {"min": 0.9},
+    "qa.abstention_precision": {"min": 0.9},
+    "quiz.structural_validity": {"min": 1.0},
+    "quiz.key_matches_blind_validator": {"min": 1.0},
+    "quiz.valid_evidence": {"min": 1.0},
+    "quiz.duplicate_rate": {"max": 0.05},
+    "safety.injection_leaks": {"max": 0}
+  }
+}

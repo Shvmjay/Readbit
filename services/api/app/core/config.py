@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     api_url: str = "http://localhost:8000"
     secret_key: str = INSECURE_DEV_SECRET
     cors_origins: str = "http://localhost:3000"
+    # Only enable when the API is reachable exclusively through a trusted proxy (the web app or a load balancer);
+    # otherwise clients could spoof X-Forwarded-For to dodge per-IP rate limits.
+    trust_proxy_headers: bool = False
 
     # --- Database
     database_url: str = "sqlite:///./readbit-dev.db"
@@ -78,6 +81,7 @@ class Settings(BaseSettings):
     max_generation_tokens: int = 8000
     guest_retention_hours: int = 24
     user_rate_limit: int = 30  # AI requests per actor per minute
+    upload_rate_limit: int = 10  # uploads per actor per 10 minutes
     ai_daily_budget: float = 25.0  # USD across the deployment per UTC day
     max_excerpt_chars: int = 320
     max_quote_ratio: float = 0.35

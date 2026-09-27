@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import AppError, ErrorCode, unauthorized
 from app.core.ratelimit import enforce
@@ -49,5 +50,5 @@ def ai_rate_limited(actor: CurrentActor = Depends(require_actor)) -> CurrentActo
 
 
 def upload_rate_limited(actor: CurrentActor = Depends(require_actor)) -> CurrentActor:
-    enforce(actor.key, "upload", limit=10, window=600)
+    enforce(actor.key, "upload", limit=get_settings().upload_rate_limit, window=600)
     return actor

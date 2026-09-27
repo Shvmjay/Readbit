@@ -1,0 +1,31 @@
+name: Live-provider AI evaluation (opt-in, paid)
+
+on:
+  workflow_dispatch:
+    inputs:
+      books:
+        description: "Dataset ids (space separated, empty = all)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    environment: ai-evaluation   # protect with required reviewers; holds the LLM_API_KEY secret
+    defaults: { run: { working-directory: services/api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[dev]" && python ../../scripts/generate_fixtures.py
+      - name: Evaluate with the live provider
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          AI_DAILY_BUDGET: "5"
+        run: python -m app.evaluations.run --provider anthropic ${{ inputs.books && format('--books {0}', inputs.books) || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: live-eval-report, path: evals/reports/ }

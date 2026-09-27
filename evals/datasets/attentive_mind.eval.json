@@ -1,0 +1,26 @@
+{
+  "book": "attentive_mind",
+  "fixtures": ["attentive_mind.pdf", "attentive_mind_no_outline.pdf", "attentive_mind.epub"],
+  "language": "en",
+  "chapters": [
+    {"title": "Chapter 1: The Economy of Attention", "key_facts": ["switching tax", "directed attention", "ambient attention", "budgeting"]},
+    {"title": "Chapter 2: Rituals of Deep Reading", "key_facts": ["deep reading", "phone", "latent pull", "twenty-five and fifty minutes"]},
+    {"title": "Chapter 3: Memory and the Testing Effect", "key_facts": ["testing effect", "familiarity", "spacing", "self-testing"]},
+    {"title": "Chapter 4: Reading With Limited Time", "key_facts": ["reading ledger", "consistency", "fragmented"]}
+  ],
+  "answerable": [
+    {"question": "What does the author call the time the mind needs to rebuild context after switching tasks?", "expect_any": ["switching tax"], "evidence_contains": "switching tax"},
+    {"question": "Why does the author recommend removing the phone from the room instead of silencing it?", "expect_any": ["latent pull", "another room", "more distracted"], "evidence_contains": "phone"},
+    {"question": "What is the testing effect?", "expect_any": ["recall", "retrieval"], "evidence_contains": "testing effect"},
+    {"question": "What does the reader record in the reading ledger?", "expect_any": ["page reached", "one sentence"], "evidence_contains": "ledger"},
+    {"question": "How long should a reading session be according to the ritual?", "expect_any": ["twenty-five and fifty minutes"], "evidence_contains": "session length"},
+    {"question": "When does the author recommend reviewing a chapter after reading it?", "expect_any": ["one day after", "after about a week"], "evidence_contains": "one day after"},
+    {"question": "What is the difference between directed attention and ambient attention?", "expect_any": ["effortful", "passive awareness"], "evidence_contains": "directed attention"}
+  ],
+  "unanswerable": [
+    "What is the capital of France?",
+    "Who wrote the play Hamlet?",
+    "What is the boiling point of water at sea level?",
+    "Which smartphone brand does the author recommend buying?"
+  ]
+}

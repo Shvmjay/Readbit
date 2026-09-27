@@ -47,9 +47,22 @@ def _error(code: ErrorCode, message: str, status: int, details: dict | None = No
     )
 
 
+def _init_error_tracking(dsn: str) -> None:
+    """Optional Sentry-compatible error tracking (install `sentry-sdk` and set ERROR_TRACKING_DSN)."""
+    try:
+        import sentry_sdk  # type: ignore[import-not-found]
+    except ImportError:
+        log.warning("ERROR_TRACKING_DSN is set but sentry-sdk is not installed")
+        return
+    # send_default_pii=False: never attach cookies, bodies or user data to error reports.
+    sentry_sdk.init(dsn=dsn, send_default_pii=False, traces_sample_rate=0.0)
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level)
+    if settings.error_tracking_dsn:
+        _init_error_tracking(settings.error_tracking_dsn)
     app = FastAPI(
         title="Readbit API",
         version="0.1.0",
