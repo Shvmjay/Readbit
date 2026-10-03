@@ -1,0 +1,11 @@
+{
+  "book": "hindi_reading",
+  "fixtures": ["hindi_reading.epub"],
+  "language": "hi",
+  "chapters": [
+    {"title": "अध्याय 1: रोज़ पढ़ना", "key_facts": ["बीस मिनट"]},
+    {"title": "अध्याय 2: याद रखना", "key_facts": ["स्मरण अभ्यास"]}
+  ],
+  "answerable": [],
+  "unanswerable": []
+}

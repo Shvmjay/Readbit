@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (lint, tests on PostgreSQL + pgvector, migrations)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env: { POSTGRES_USER: readbit, POSTGRES_PASSWORD: readbit, POSTGRES_DB: readbit_test }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U readbit" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults: { run: { working-directory: services/api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: services/api/pyproject.toml }
+      - run: pip install -e ".[dev]"
+      - name: Lint and format
+        run: ruff check app tests && ruff format --check app tests migrations
+      - name: Regenerate fixtures
+        run: python ../../scripts/generate_fixtures.py
+      - name: Unit + integration tests (SQLite)
+        run: pytest --cov=app --cov-report=term --cov-report=xml
+      - name: Unit + integration tests (PostgreSQL + pgvector)
+        env: { TEST_DATABASE_URL: "postgresql+psycopg://readbit:readbit@localhost:5432/readbit_test" }
+        run: pytest
+      - name: Migrations apply cleanly and match models
+        env: { DATABASE_URL: "postgresql+psycopg://readbit:readbit@localhost:5432/readbit_test" }
+        run: |
+          psql "postgresql://readbit:readbit@localhost:5432/readbit_test" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+          alembic upgrade head && alembic check && alembic downgrade base && alembic upgrade head
+      - uses: actions/upload-artifact@v4
+        with: { name: backend-coverage, path: services/api/coverage.xml }
+
+  ai-evaluation:
+    name: AI regression evaluation (offline, deterministic)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: services/api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: services/api/pyproject.toml }
+      - run: pip install -e ".[dev]" && python ../../scripts/generate_fixtures.py
+      - name: Run evaluation suite and enforce release gates
+        run: python -m app.evaluations.run --provider extractive
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: eval-report, path: evals/reports/ }
+
+  frontend:
+    name: Frontend (lint, typecheck, unit tests, build)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: apps/web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: apps/web/package-lock.json }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: End-to-end (Playwright journeys A–E, accessibility, mobile)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: services/api/pyproject.toml }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: apps/web/package-lock.json }
+      - run: pip install -e "services/api[dev]" && python scripts/generate_fixtures.py
+      - working-directory: apps/web
+        run: npm ci && npx playwright install --with-deps chromium && npm run build
+      - working-directory: apps/web
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: apps/web/playwright-report/ }
+
+  security:
+    name: Dependency and secret scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Python dependency audit
+        run: pip install pip-audit && pip-audit -r <(python -c "import tomllib;print('\n'.join(tomllib.load(open('services/api/pyproject.toml','rb'))['project']['dependencies']))")
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: npm audit (production dependencies, high+)
+        working-directory: apps/web
+        run: npm ci --ignore-scripts && npm audit --omit=dev --audit-level=high
+      - name: Bandit-style static checks (ruff "S" rules, selected with documented ignores in pyproject.toml)
+        working-directory: services/api
+        # No --select on the CLI: it would override the project's deliberate ignores (S101, S110, S112).
+        run: pip install ruff && ruff check app
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+
+  containers:
+    name: Container builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: docker build -f infra/docker/api.Dockerfile --target base -t readbit-api:ci .
+      - run: docker build -f infra/docker/api.Dockerfile --target worker -t readbit-worker:ci .
+      - run: docker build -f infra/docker/web.Dockerfile -t readbit-web:ci .

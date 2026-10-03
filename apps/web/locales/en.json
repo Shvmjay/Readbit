@@ -1,0 +1,145 @@
+{
+  "brand": { "name": "Readbit", "tagline": "Read more. Learn better. Make every minute count." },
+  "common": {
+    "loading": "Loading…", "retry": "Try again", "cancel": "Cancel", "save": "Save", "delete": "Delete", "close": "Close",
+    "back": "Back", "next": "Next", "continue": "Continue", "unknown": "Not available", "minutes": "{n} min",
+    "chapters": "{n} chapters", "pages": "{n} pages", "words": "{n} words", "signOut": "Sign out", "edit": "Edit",
+    "workSafe": "Your work is safe.", "copied": "Copied", "copy": "Copy", "download": "Download", "yes": "Yes", "no": "No",
+    "guestBadge": "Guest", "error": "Something went wrong", "notFound": "We couldn't find that page.", "goHome": "Go to dashboard"
+  },
+  "nav": {
+    "home": "Home", "library": "Library", "upload": "Upload", "learning": "Learning", "settings": "Settings",
+    "main": "Main navigation", "skip": "Skip to content", "openMenu": "Open menu"
+  },
+  "landing": {
+    "heroTitle": "Your next great read, in less time.",
+    "heroBody": "Upload a book you own. Readbit turns it into faithful chapter summaries you can trust — every claim linked to the page it came from — and into short, adaptive lessons that help you remember what you read.",
+    "ctaStart": "Start reading", "ctaHow": "Explore how it works",
+    "howTitle": "How Readbit works",
+    "how1Title": "Upload your book", "how1Body": "Add a PDF or EPUB from your computer or phone. Readbit reads its structure: chapters, sections and pages.",
+    "how2Title": "Read the essentials", "how2Body": "Choose a chapter and a depth. Summaries keep the author's reasoning, examples and caveats — with citations.",
+    "how3Title": "Learn it for good", "how3Body": "Four-option lessons, instant feedback and revision of weak concepts turn reading into lasting understanding.",
+    "sumTitle": "A summarizer that shows its sources",
+    "sumBody": "Every section of a Readbit summary points back to the passage that supports it. Tap a citation to see the original text and where it is in your book.",
+    "sumPoint1": "Concise, balanced or comprehensive depth", "sumPoint2": "Central thesis, arguments, examples and caveats", "sumPoint3": "Ask questions answered only from your book",
+    "quizTitle": "A quizzer that adapts to you",
+    "quizBody": "Lessons follow your book chapter by chapter. Questions get harder as you improve and easier when you struggle — and weak concepts come back for revision.",
+    "quizPoint1": "Exactly four options, one validated answer", "quizPoint2": "The correct answer and the supporting passage, every time", "quizPoint3": "Progress, mastery and achievements",
+    "exampleTitle": "From chapter to understanding",
+    "exampleIntro": "An illustration using a short sample passage written for this page.",
+    "exampleSource": "Sample passage",
+    "exampleSourceText": "Attention is the scarcest resource a reader owns. Every interruption spends part of it before real work begins — a cost the author calls the switching tax.",
+    "exampleSummary": "Summary", "exampleSummaryText": "The author treats attention as a limited budget: each interruption carries a “switching tax” paid before focus returns.",
+    "exampleQuiz": "Lesson question", "exampleQuizQ": "What does the author call the cost of an interruption?",
+    "exampleQuizA": "The switching tax", "exampleQuizB": "Ambient attention", "exampleQuizC": "The reading ledger", "exampleQuizD": "Latent pull",
+    "trustTitle": "Private by default. Grounded by design.",
+    "trust1Title": "Your book stays yours", "trust1Body": "Uploads are stored privately, never shared or published, and never used to train AI models. Delete a book — or your account — at any time.",
+    "trust2Title": "Only what the book says", "trust2Body": "Summaries, answers and quiz explanations use only your uploaded book. When the book doesn't cover something, Readbit says so instead of guessing.",
+    "trust3Title": "Clear about limits", "trust3Body": "If a page couldn't be read or chapters weren't detected reliably, you'll see it. AI-generated content is always labelled.",
+    "faqTitle": "Questions, answered",
+    "faq1Q": "Which files can I upload?", "faq1A": "DRM-free PDF and EPUB files of books you have the right to use. Scanned PDFs need OCR, which may not be enabled on every server.",
+    "faq2Q": "Does Readbit replace reading the book?", "faq2A": "No. It helps you get more out of limited time and review what you read. The original book remains the full, authoritative work.",
+    "faq3Q": "Can I use Readbit without an account?", "faq3A": "Yes. Guest sessions let you try everything; guest books are deleted automatically after the retention period. Create an account to keep your library.",
+    "faq4Q": "Which languages are supported?", "faq4A": "The interface is available in English and Hindi. Summaries and lessons are produced in your book's language, and in other supported languages when a translation-capable AI engine is configured.",
+    "footerPrivacy": "Privacy", "footerTerms": "Terms", "footerCopyright": "Copyright", "footerContact": "Contact", "footerNote": "Readbit is a reading and learning aid. It does not replace the original publication."
+  },
+  "onboarding": {
+    "title": "Welcome to Readbit", "subtitle": "Start in seconds. You can create an account later.",
+    "language": "Interface language", "sourceNote": "Your uploaded book is the only source Readbit uses to write summaries, answers and questions.",
+    "privacyTitle": "Privacy and retention", "privacyGuest": "As a guest, your books and progress are kept for {hours} hours on this browser, then deleted automatically.",
+    "privacyUser": "With an account, your library stays private and is kept until you delete it.",
+    "ack": "I understand how my uploads are used and stored.", "ackRequired": "Please confirm to continue.",
+    "guest": "Continue as guest", "register": "Create an account", "login": "Sign in"
+  },
+  "auth": {
+    "loginTitle": "Sign in", "registerTitle": "Create your account", "email": "Email", "password": "Password", "displayName": "Name (optional)",
+    "passwordHint": "At least 10 characters, with a number or symbol.", "submitLogin": "Sign in", "submitRegister": "Create account",
+    "noAccount": "New to Readbit?", "haveAccount": "Already have an account?", "forgot": "Forgot password?",
+    "guestMerge": "Books from your guest session will be moved into your account.",
+    "resetTitle": "Reset your password", "resetBody": "Enter your email and we'll send you a reset link.", "resetSend": "Send reset link",
+    "resetSent": "If an account exists for this email, a reset link has been sent.", "newPassword": "New password", "resetSubmit": "Set new password",
+    "resetDone": "Password updated. Please sign in.", "emailInvalid": "Enter a valid email address.", "passwordShort": "Use at least 10 characters."
+  },
+  "dashboard": {
+    "greeting": "Good to see you{name}.", "guestNotice": "You're using a guest session. It expires {when}. Create an account to keep your books.",
+    "keep": "Keep my books", "upload": "Upload a book", "continueReading": "Continue reading", "continueLearning": "Continue learning",
+    "recentBooks": "Recent books", "weak": "Concepts to revisit", "recentLessons": "Recently completed lessons", "viewLibrary": "View library",
+    "emptyTitle": "Your library is empty", "emptyBody": "Upload a PDF or EPUB to get a grounded summary and a set of lessons built from your own book.",
+    "emptyPoint1": "Summarizer — chapter and whole-book summaries with citations", "emptyPoint2": "Quizzer — adaptive four-option lessons with explanations",
+    "streak": "Practice streak", "streakDays": "{n} day(s)", "goal": "Today's goal", "goalProgress": "{a} of {b} questions",
+    "noWeak": "No weak concepts right now.", "resume": "Resume", "lessonScore": "{c}/{n} correct", "chapterOf": "Chapter"
+  },
+  "library": { "title": "Library", "subtitle": "Your private shelf. Only you can see these books.", "loadMore": "Load more", "delete": "Delete book", "deleteConfirm": "Delete “{title}”? The file, summaries, notes and progress for this book will be permanently removed.", "deleted": "Book deleted" },
+  "upload": {
+    "title": "Upload a book", "subtitle": "PDF or EPUB, up to {mb} MB. DRM-free files only.", "drop": "Drag and drop your book here", "or": "or",
+    "choose": "Choose a file", "rights": "Upload only books you have the right to use. Readbit keeps them private.",
+    "stateSelected": "Selected", "stateUploading": "Uploading", "stateUploaded": "Uploaded", "duplicate": "You've already uploaded this book — opening it.",
+    "processing": "Processing", "open": "Open book", "another": "Upload another", "guestRetention": "Guest uploads are deleted after {hours} hours.",
+    "leaveNote": "You can leave this page — processing continues in the background."
+  },
+  "processing": {
+    "uploaded": "Uploaded", "validating": "Validating", "extracting": "Extracting text", "structuring": "Detecting chapters", "chunking": "Organising passages",
+    "indexing": "Indexing", "ready": "Ready", "failed": "Failed", "title": "Processing your book", "retry": "Retry processing",
+    "failedTitle": "We couldn't process this book"
+  },
+  "book": {
+    "overview": "Overview", "summarizer": "Summarizer", "quizzer": "Quizzer", "notes": "Notes", "read": "Source",
+    "author": "Author", "format": "Format", "language": "Language", "chapters": "Chapters", "readingTime": "Reading time (full book)",
+    "toc": "Table of contents", "summarize": "Summarize", "learn": "Learn", "bookmarks": "Bookmarks", "authorUnknown": "Author not detected",
+    "structureWarning": "Chapter detection confidence is low. The book was divided into clearly labelled sections.", "warnings": "Processing notes",
+    "summaryProgress": "Chapters read", "quizProgress": "Chapters completed", "overviewSummary": "Book overview", "generateOverview": "Generate book overview",
+    "detected": "Detected by: {method}"
+  },
+  "summary": {
+    "scope": "Scope", "wholeBook": "Entire book", "chapter": "Chapter", "depth": "Depth", "concise": "Concise", "balanced": "Balanced", "comprehensive": "Comprehensive",
+    "outputLanguage": "Summary language", "generating": "Writing a grounded summary…", "generatingBody": "Readbit reads every passage of the selection and cites its sources. This can take a moment.",
+    "thesis": "Central thesis", "definitions": "Key concepts", "examples": "Examples and evidence", "caveats": "Caveats and qualifications",
+    "connections": "Connections", "conclusion": "Conclusion", "takeaways": "Key takeaways", "sources": "Sources", "gaps": "Known gaps",
+    "coverage": "{cited} of {total} passages cited", "chaptersCovered": "{covered} of {total} chapters covered",
+    "readTime": "{a} min read · book section {b} min", "engineExtractive": "Extractive summary: key sentences selected verbatim from your book by Readbit's offline engine.",
+    "engineGenerative": "AI-generated summary. Each section cites the passages it is based on.", "citation": "Source {n}",
+    "export": "Export", "bookmark": "Bookmark", "bookmarked": "Bookmarked", "highlight": "Highlight", "addNote": "Add note",
+    "failed": "The summary couldn't be generated", "prevChapter": "Previous chapter", "nextChapter": "Next chapter", "keyConcepts": "Key concepts"
+  },
+  "evidence": { "title": "Source passage", "page": "Page {p}", "printed": "printed page {p}", "location": "Location", "openInSource": "Open in source", "translate": "Translate", "translation": "Machine translation — the original passage is authoritative.", "ocr": "Read with OCR; minor errors are possible." },
+  "assistant": {
+    "title": "Ask this book", "placeholder": "Ask a question about the book…", "ask": "Ask", "scopeBook": "Whole book", "scopeChapter": "This chapter",
+    "onlyBook": "Answers come only from your uploaded book.", "notInBook": "Not in this book", "confidence": "Confidence: {c}", "thinking": "Searching the book…"
+  },
+  "annotations": {
+    "title": "Notes and highlights", "empty": "No notes yet. Highlight passages or add notes while reading.", "note": "Note", "highlight": "Highlight", "bookmark": "Bookmark",
+    "yourNote": "Your note", "fromBook": "From the book", "save": "Save note", "export": "Export notes (Markdown)", "all": "All", "deleteConfirm": "Delete this annotation?",
+    "notePlaceholder": "Write your thoughts…", "added": "Saved"
+  },
+  "reader": { "title": "Source text", "hint": "Select text to highlight it or add a note.", "passage": "Passage {p}", "noSelection": "Select some text first." },
+  "quiz": {
+    "lessons": "Lessons", "start": "Start lesson", "continue": "Continue", "review": "Practice again", "revision": "Revise weak concepts", "revisionBody": "Revisit topics you found difficult. Questions you've seen before can come back here.",
+    "preparing": "Preparing validated questions…", "preparingBody": "Questions are generated from this chapter, checked against the text and de-duplicated before you see them.",
+    "unavailable": "No questions available", "question": "Question {i} of {n}", "submit": "Check answer", "next": "Next question", "finish": "See results",
+    "correct": "Correct!", "incorrect": "Not quite", "correctAnswer": "Correct answer", "why": "Why", "misconception": "Common misconception", "support": "Supporting passage",
+    "resultTitle": "Lesson complete", "resultScore": "You answered {c} of {n} correctly.", "backToLessons": "Back to lessons", "chapterComplete": "Chapter complete",
+    "difficulty": "Difficulty", "difficulty1": "Easy", "difficulty2": "Medium", "difficulty3": "Hard", "type_recall": "Recall", "type_comprehension": "Comprehension",
+    "type_application": "Application", "type_inference": "Inference", "questionsReady": "{n} questions ready", "noBank": "Questions are created when you start", "generating": "Generating questions",
+    "accuracy": "{p}% accuracy", "completed": "Completed", "mastery": "Topic mastery", "masteryNote": "Estimated from your answers; not a measure of long-term retention.",
+    "selectOption": "Choose an answer", "achievement": "Achievement unlocked", "nothingToRevise": "Nothing to revise yet"
+  },
+  "learning": {
+    "title": "Learning", "subtitle": "Your progress across books.", "achievements": "Achievements", "locked": "Not earned yet", "booksInProgress": "Books in progress",
+    "questionsAnswered": "Questions answered", "accuracy": "Question accuracy", "accuracyNote": "Accuracy on Readbit questions — not a measure of long-term retention.",
+    "chaptersCompleted": "Chapters completed"
+  },
+  "settings": {
+    "title": "Settings", "account": "Account", "preferences": "Preferences", "language": "Interface language", "contentLanguage": "Preferred summary language",
+    "theme": "Theme", "light": "Light", "dark": "Dark", "system": "System", "goal": "Daily goal (questions)", "saved": "Saved",
+    "data": "Your data", "export": "Export my data", "deleteAccount": "Delete account", "deleteBody": "This permanently deletes your account, books, notes and progress. Type DELETE to confirm.",
+    "deleteConfirmLabel": "Type DELETE", "guestTitle": "Guest session", "guestBody": "Create an account to keep your library beyond {hours} hours."
+  },
+  "errors": {
+    "unsupported_file": "That file type isn't supported. Upload a PDF or EPUB.", "file_too_large": "That file is too large.",
+    "network_failure": "Connection problem. Check your network and try again.", "rate_limited": "You're going a little fast — wait a moment and try again.",
+    "session_expired": "Your session has expired. Please sign in again.", "unauthorized": "Please sign in or start a guest session.",
+    "language_unsupported": "That language isn't available with the current AI engine.", "ai_provider_unavailable": "The AI service is temporarily unavailable. Please retry shortly.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "legal": { "privacyTitle": "Privacy", "termsTitle": "Terms of use", "copyrightTitle": "Copyright" }
+}
