@@ -19,8 +19,9 @@
   reset.
 - Guest sessions: same token scheme, `GUEST_RETENTION_HOURS` expiry; expired guests cannot authenticate and are purged
   hourly with their books and files.
-- Password reset: single-use hashed tokens (30 min). Responses do not reveal whether an account exists. The development
-  "delivery" logs the link locally and is disabled in production — a mail adapter must be added before launch.
+- Password reset: single-use hashed tokens (30 min), emailed via SMTP (`EMAIL_DELIVERY=smtp`, any provider) in the
+  user's language. Responses never reveal whether an account exists, including when delivery fails. Log delivery is
+  development-only and rejected by production config validation.
 - Cookies: `HttpOnly`, `SameSite=Lax`, `Secure` in production, first-party via the web proxy.
 
 ## Authorization
@@ -54,8 +55,9 @@
 - PDF: encrypted files rejected with a clear message, page limit (`MAX_DOCUMENT_PAGES`), processing time budget.
 - Filenames sanitized; storage keys are random (`books/<hex>.pdf`) and never exposed; local storage rejects keys that
   escape its root. S3 uploads request server-side encryption.
-- Malware scanning is **not** implemented; recommended before production (e.g. ClamAV sidecar or the storage
-  provider's scanning) — see DEPLOYMENT.md.
+- Malware scanning: with `MALWARE_SCANNER=clamav` every upload is streamed to clamd (INSTREAM) **before** it is
+  stored; infected files are rejected (`malware_detected`) and the scan fails closed (`scanner_unavailable`, retryable)
+  if clamd is unreachable. Docker Compose runs a ClamAV container.
 
 ## AI security
 
@@ -107,5 +109,5 @@ libraries (no PyMuPDF/ebooklib). No credentials are committed; `.env.example` ho
 
 ## Known gaps
 
-No malware scanning, no MFA, no OAuth providers yet, no per-user storage quotas beyond upload rate limits, and the
-password-reset mail adapter is missing. No independent penetration test has been performed.
+No MFA, no OAuth providers yet, and no per-user storage quotas beyond upload rate limits. No independent penetration
+test has been performed.

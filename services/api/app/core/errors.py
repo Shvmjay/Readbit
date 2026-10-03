@@ -20,6 +20,8 @@ class ErrorCode(StrEnum):
     PROCESSING_TIMEOUT = "processing_timeout"
     DOCUMENT_TOO_LONG = "document_too_long"
     DUPLICATE_UPLOAD = "duplicate_upload"
+    MALWARE_DETECTED = "malware_detected"
+    SCANNER_UNAVAILABLE = "scanner_unavailable"
     AI_PROVIDER_UNAVAILABLE = "ai_provider_unavailable"
     AI_OUTPUT_INVALID = "ai_output_invalid"
     AI_BUDGET_EXCEEDED = "ai_budget_exceeded"
@@ -44,6 +46,7 @@ RETRYABLE = {
     ErrorCode.PROCESSING_TIMEOUT,
     ErrorCode.RATE_LIMITED,
     ErrorCode.STORAGE_FAILURE,
+    ErrorCode.SCANNER_UNAVAILABLE,
     ErrorCode.AI_OUTPUT_INVALID,
     ErrorCode.INTERNAL,
 }

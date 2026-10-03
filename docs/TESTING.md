@@ -79,8 +79,8 @@ never reads the answer key.
 
 | Suite | Result |
 |---|---|
-| Backend, SQLite | 80 passed |
-| Backend, PostgreSQL 16 + pgvector 0.6 | 80 passed |
+| Backend, SQLite | 86 passed |
+| Backend, PostgreSQL 16 + pgvector 0.6 | 86 passed |
 | Backend coverage | 82 % of `app` lines |
 | Alembic | upgrade → check (no drift) → downgrade → upgrade OK on PostgreSQL |
 | Evaluation (offline) | 17/17 gates passed (see AI_GROUNDING.md) |

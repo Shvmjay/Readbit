@@ -21,8 +21,8 @@ It works for guests (temporary sessions) and registered users (private library),
 
 | Area | What is implemented |
 |---|---|
-| Accounts | Guest sessions (hashed tokens, automatic expiry), email + password accounts (argon2id), server-side sessions, password reset, guest → account migration, account deletion, data export |
-| Library | Upload (drag & drop, progress), validation (magic bytes, size, zip-bomb and path checks, encryption/DRM detection), duplicate detection, persistent processing status, retry, deletion |
+| Accounts | Guest sessions (hashed tokens, automatic expiry), email + password accounts (argon2id), server-side sessions, password reset by email (SMTP), guest → account migration, account deletion, data export |
+| Library | Upload (drag & drop, progress), validation (magic bytes, size, zip-bomb and path checks, encryption/DRM detection), optional ClamAV scanning, duplicate detection, persistent processing status, retry, deletion |
 | Ingestion | PDF (pypdf: outline, page labels, header/footer removal, font-size headings, OCR adapter) and EPUB 2/3 (spine, nav/NCX, sanitized XHTML); chapter detection with confidence and disclosed fallbacks; chunking with stable source locations; embeddings |
 | Summarizer | Chapter + book summaries, 3 depths, hierarchical map → reduce for long chapters, book synthesis over *every* chapter, evidence resolution + citation checks, coverage and known-gap disclosure, caching, Markdown export |
 | Book Q&A | Hybrid retrieval (BM25 + embeddings, RRF), grounded answers with citations, explicit abstention |
@@ -30,7 +30,7 @@ It works for guests (temporary sessions) and registered users (private library),
 | Reading | Source reader with highlights, notes and bookmarks; reading position; progress |
 | i18n | English and Hindi UI (347 keys, parity-tested), localized landing/legal pages, language-aware summaries |
 | AI platform | Provider abstraction, per-task model routing, versioned prompts, JSON-schema outputs, retries/backoff, escalation, daily budget, rate limits, cost tracking, offline extractive engine |
-| Quality | 80 backend tests (82% coverage, SQLite + PostgreSQL), 6 frontend unit tests, 8 Playwright E2E tests (journeys A–E, i18n, axe accessibility, mobile), AI evaluation suite with release gates |
+| Quality | 86 backend tests (82% coverage, SQLite + PostgreSQL), 6 frontend unit tests, 8 Playwright E2E tests (journeys A–E, i18n, axe accessibility, mobile), AI evaluation suite with release gates |
 | Ops | Docker images (API, worker with OCR, web), Docker Compose (Postgres+pgvector, Redis, MinIO), GitHub Actions CI, opt-in live-provider evaluation workflow, health/readiness endpoints, structured logs |
 
 ## Architecture at a glance
@@ -175,7 +175,6 @@ Summarized here; the authoritative list is in [`PROJECT_STATE.md`](PROJECT_STATE
 - The default embedding is a lexical hashing embedder (deterministic, no key); semantic retrieval quality will improve
   with a neural embedding provider.
 - OCR requires Tesseract in the worker image (`OCR_PROVIDER=tesseract`); the worker image build was not validated here.
-- Password-reset email delivery is a development logger only; a mail adapter is required for production.
 - Billing/subscriptions, native apps, text-to-speech and social features are out of scope for the MVP.
 
 ## Documentation

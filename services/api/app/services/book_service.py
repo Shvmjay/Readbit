@@ -13,6 +13,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError, ErrorCode, not_found
 from app.core.logging import get_logger
 from app.core.security import sha256_hex
+from app.document_processing.scanning import scan_upload
 from app.document_processing.validation import validate_upload
 from app.models.books import Book, Chapter, ProcessingJob, SourceFile
 from app.services.actors import CurrentActor
@@ -57,6 +58,7 @@ def upload_book(
     settings = get_settings()
     track(db, "book_upload_initiated", actor.key)
     validated = validate_upload(filename, content_type, data)
+    scan_upload(data)
     checksum = sha256_hex(data)
     duplicate = db.scalar(
         select(Book).where(

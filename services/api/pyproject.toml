@@ -44,6 +44,7 @@ include = ["app*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q"
 filterwarnings = ["ignore::DeprecationWarning", "ignore::bs4.XMLParsedAsHTMLWarning"]
 

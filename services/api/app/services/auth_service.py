@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.errors import AppError, ErrorCode
 from app.core.logging import get_logger
+from app.core.mail import MailError, send_password_reset
 from app.core.security import hash_password, hash_token, needs_rehash, new_token, verify_password
 from app.models.books import Book
 from app.models.content import Annotation, ReadingState
@@ -216,12 +217,12 @@ def request_password_reset(db: Session, email: str) -> str | None:
         )
     )
     db.commit()
-    if get_settings().email_delivery == "log" and not get_settings().is_production:
-        # Development delivery: the link is logged locally. Production must configure a real mail adapter.
-        log.info(
-            "password reset link",
-            extra={"reset_url": f"{get_settings().app_url}/reset-password?token={token}"},
-        )
+    url = f"{get_settings().app_url}/reset-password?token={token}"
+    try:
+        send_password_reset(user.email or email, url, user.preferred_language)
+    except MailError:
+        # The response stays identical either way (no account enumeration); the failure is logged for operators.
+        pass
     return token
 
 

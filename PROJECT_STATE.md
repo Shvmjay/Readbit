@@ -20,7 +20,7 @@ run against the real API. Next milestone: live-provider evaluation + calibration
 
 ## Verified (commands run in this environment)
 
-- Backend: `pytest` — 80 passed on SQLite and on PostgreSQL 16 + pgvector; coverage 82 %; `ruff check` + `ruff format --check` clean.
+- Backend: `pytest` — 86 passed on SQLite and on PostgreSQL 16 + pgvector; coverage 82 %; `ruff check` + `ruff format --check` clean.
 - Alembic: `upgrade head` → `check` (no drift) → `downgrade base` → `upgrade head` on PostgreSQL.
 - Evaluation: `python -m app.evaluations.run` — 17/17 release gates passed (offline engine); baseline saved in `evals/baselines/extractive.json`.
 - Frontend: ESLint, `tsc --noEmit`, Vitest (6 passed), `next build` — all clean.
@@ -48,8 +48,9 @@ run against the real API. Next milestone: live-provider evaluation + calibration
 2. **Embeddings are lexical** (hashing). Add a neural embedding provider for better semantic retrieval and dedup.
 3. **OCR**: Tesseract adapter implemented; worker image with Tesseract not built/verified here (Docker Hub rate limit
    and no apt egress during the local build).
-4. **Email**: password-reset delivery only logs in development; a mail adapter is required for production.
-5. **Not implemented**: malware scanning, MFA/OAuth, billing/subscription abstraction, manual chapter-boundary
+4. **Email and malware scanning** are implemented (SMTP adapter, ClamAV INSTREAM) and tested against fakes; not yet
+   tried against a real SMTP provider or a real clamd.
+5. **Not implemented**: MFA/OAuth, billing/subscription abstraction, manual chapter-boundary
    correction UI, per-user storage quotas, Q&A history persistence, text-to-speech.
 6. **Not measured**: load/performance targets (p95), cross-browser E2E beyond Chromium, long-book (500+ page)
    processing time and cost.
@@ -60,7 +61,7 @@ run against the real API. Next milestone: live-provider evaluation + calibration
 
 1. Run the live-provider evaluation; review a sample of summaries/questions by hand; set semantic gate thresholds.
 2. Add a neural embedding provider behind `Embedder`; re-run evaluations.
-3. Implement the mail adapter and malware scanning; build and verify the worker image with Tesseract.
+3. Configure a real SMTP provider and clamd in staging; build and verify the worker image with Tesseract (CI builds it).
 4. Staging deployment per `docs/DEPLOYMENT.md`; load test common endpoints; set alerts.
 
 ## MVP acceptance criteria
@@ -109,7 +110,7 @@ Checked items were verified by automated tests or direct runs in this environmen
 - [x] Storage is private and secure
 - [x] Errors are handled gracefully
 - [x] Automated unit, integration and end-to-end tests pass
-- [ ] No critical unresolved security findings remain — no known critical findings, but no independent review/pen test and malware scanning is not implemented
+- [ ] No critical unresolved security findings remain — no known critical findings, but no independent review or pen test yet
 - [x] Monitoring and health checks are implemented (health/readiness, structured logs, AI execution records, optional error tracking)
 - [x] CI/CD and deployment instructions are complete (CI workflow written; not yet run on GitHub)
 

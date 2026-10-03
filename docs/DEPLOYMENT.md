@@ -15,6 +15,7 @@
 | Queue | Managed Redis (ElastiCache, Memorystore, Upstash) | Used for Celery and rate limits |
 | Storage | Private S3-compatible bucket (S3, GCS via S3 API, R2) | Block public access, SSE, lifecycle rules |
 | Edge | Load balancer / CDN terminating TLS for the web origin | HSTS; only the web service is public |
+| Malware scanning | ClamAV container (`clamav/clamav`) reachable only from the API | Signatures auto-update via freshclam |
 | Monitoring | Centralized logs (JSON stdout), error tracking (`ERROR_TRACKING_DSN`, Sentry-compatible), uptime checks on `/health` and `/ready` | |
 
 Only the web service needs to be public. Keep the API private (reachable from the web service) and set
@@ -35,7 +36,8 @@ JOB_BACKEND=celery
 STORAGE_PROVIDER=s3  STORAGE_BUCKET=...  STORAGE_REGION=...  (credentials via workload identity when possible)
 DEFAULT_LLM_PROVIDER=anthropic  LLM_API_KEY=<secret>   (or keep extractive)
 AI_DAILY_BUDGET=<USD>  USER_RATE_LIMIT=30  UPLOAD_RATE_LIMIT=10
-EMAIL_DELIVERY=disabled                    # until a mail adapter is implemented
+EMAIL_DELIVERY=smtp  SMTP_HOST=...  SMTP_FROM="Readbit <no-reply@readbit.example>"  SMTP_USERNAME/SMTP_PASSWORD (secret)
+MALWARE_SCANNER=clamav  CLAMAV_HOST=<clamd service>  CLAMAV_PORT=3310
 ```
 
 Store secrets in the platform's secret manager; never bake them into images. Startup validation refuses production
@@ -120,6 +122,6 @@ Monitor cost per book (`ai_executions` grouped by `book_id`).
 - [ ] Workers and beat running; queue depth monitored
 - [ ] Error tracking DSN configured (`pip install sentry-sdk`)
 - [ ] AI budget and rate limits reviewed; live evaluation run passed if using a generative provider
-- [ ] Mail adapter for password reset implemented (or reset disabled)
-- [ ] Malware scanning for uploads decided (recommended)
+- [ ] SMTP provider configured (domain SPF/DKIM verified) and a reset email received
+- [ ] ClamAV (clamd) running with fresh signatures; `MALWARE_SCANNER=clamav`
 - [ ] Restore test performed

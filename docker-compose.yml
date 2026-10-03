@@ -39,10 +39,16 @@ services:
       sh -c "sleep 3 && mc alias set local http://minio:9000 readbit readbit-dev-only &&
              mc mb --ignore-existing local/readbit-private && mc anonymous set none local/readbit-private"
 
+  clamav:
+    image: clamav/clamav:stable
+    # First start downloads signatures (a few minutes); uploads are rejected as retryable until it is ready.
+
   api:
     build: { context: ., dockerfile: infra/docker/api.Dockerfile, target: base }
     env_file: .env
     environment:
+      MALWARE_SCANNER: clamav
+      CLAMAV_HOST: clamav
       DATABASE_URL: postgresql+psycopg://readbit:readbit-dev-only@db:5432/readbit
       REDIS_URL: redis://redis:6379/0
       JOB_BACKEND: celery

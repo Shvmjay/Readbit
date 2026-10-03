@@ -40,7 +40,15 @@ class Settings(BaseSettings):
     auth_client_secret: str = ""
     session_ttl_hours: int = 24 * 14
     password_reset_ttl_minutes: int = 30
-    email_delivery: Literal["log", "disabled"] = "log"
+    email_delivery: Literal["log", "smtp", "disabled"] = "log"
+    # SMTP works with any transactional provider (Postmark, SES, Resend, Mailgun, SendGrid...).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_starttls: bool = True  # STARTTLS on 587; set false and use port 465 for implicit TLS
+    smtp_timeout_seconds: float = 15.0
 
     # --- Object storage
     storage_provider: Literal["local", "s3"] = "local"
@@ -73,6 +81,11 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 256
     ocr_provider: Literal["none", "tesseract"] = "none"
     ocr_api_key: str = ""
+    # Upload malware scanning. "clamav" streams each upload to clamd (INSTREAM) before it is stored.
+    malware_scanner: Literal["none", "clamav"] = "none"
+    clamav_host: str = "localhost"
+    clamav_port: int = 3310
+    clamav_timeout_seconds: float = 30.0
 
     # --- Limits
     max_upload_size_mb: int = 50
@@ -121,6 +134,12 @@ class Settings(BaseSettings):
                 problems.append("JOB_BACKEND must be 'celery' in production.")
             if self.storage_provider == "local":
                 problems.append("STORAGE_PROVIDER must be 's3' in production.")
+            if self.email_delivery == "log":
+                problems.append(
+                    "EMAIL_DELIVERY must be 'smtp' or 'disabled' in production (never log reset links)."
+                )
+        if self.email_delivery == "smtp" and not (self.smtp_host and self.smtp_from):
+            problems.append("SMTP_HOST and SMTP_FROM are required when EMAIL_DELIVERY=smtp.")
         if self.default_llm_provider == "anthropic" and not self.llm_api_key:
             problems.append("LLM_API_KEY is required when DEFAULT_LLM_PROVIDER=anthropic.")
         if self.storage_provider == "s3" and not self.storage_bucket:

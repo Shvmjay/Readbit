@@ -75,13 +75,13 @@ def test_guest_books_migrate_to_new_account():
 def test_password_reset_flow(caplog):
     c = make_client()
     register(c, "reset@example.com")
-    with caplog.at_level(logging.INFO, logger="readbit.auth"):
+    with caplog.at_level(logging.INFO, logger="readbit.mail"):
         r = c.post("/api/v1/auth/password-reset/request", json={"email": "reset@example.com"})
     assert r.status_code == 200
     unknown = c.post("/api/v1/auth/password-reset/request", json={"email": "ghost@example.com"})
     assert unknown.json() == r.json()
-    url = next(rec.reset_url for rec in caplog.records if hasattr(rec, "reset_url"))
-    token = re.search(r"token=(.+)$", url).group(1)
+    body = next(rec.body for rec in caplog.records if hasattr(rec, "body"))
+    token = re.search(r"token=(\S+)", body).group(1)
     assert (
         c.post(
             "/api/v1/auth/password-reset/confirm", json={"token": token, "password": "brand-new-pass-7"}
