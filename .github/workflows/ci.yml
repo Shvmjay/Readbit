@@ -109,8 +109,10 @@ jobs:
       - name: npm audit (production dependencies, high+)
         working-directory: apps/web
         run: npm ci --ignore-scripts && npm audit --omit=dev --audit-level=high
-      - name: Bandit-style static checks (ruff S rules)
-        run: pip install ruff && ruff check services/api/app --select S
+      - name: Bandit-style static checks (ruff "S" rules, selected with documented ignores in pyproject.toml)
+        working-directory: services/api
+        # No --select on the CLI: it would override the project's deliberate ignores (S101, S110, S112).
+        run: pip install ruff && ruff check app
       - name: Secret scan
         uses: gitleaks/gitleaks-action@v2
         env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }

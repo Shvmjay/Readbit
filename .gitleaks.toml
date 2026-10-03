@@ -1,0 +1,12 @@
+# gitleaks configuration: default rules plus a narrow allowlist of known, non-secret test fixtures.
+# Only these exact literal values are allowed; anything else in these files is still scanned.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixed SECRET_KEY values used only by tests, the E2E launcher and the offline evaluation runner"
+regexes = [
+  '''test-secret-key-0123456789abcdef0123456789''',
+  '''e2e-secret-key-0123456789abcdef0123456789''',
+  '''evaluation-secret-key-0123456789abcdef0123''',
+]
