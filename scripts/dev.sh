@@ -6,7 +6,8 @@
 #
 # Optional environment: API_PORT (default 8000), WEB_PORT (default 3000), NO_OPEN=1 (don't open a browser).
 # Data lives in .data/local/ (git-ignored). Press Ctrl+C to stop both servers.
-set -euo pipefail
+# No `set -u`: macOS ships bash 3.2, whose `-u` reports "unbound variable" for valid code (e.g. empty arrays).
+set -eo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_DIR="$ROOT/services/api"
@@ -75,7 +76,7 @@ if [ ! -f "$BUILD_ID" ] || [ -n "$(find "$WEB_DIR/app" "$WEB_DIR/components" "$W
 fi
 
 # ---------------------------------------------------------------- start
-# Plain variables, not an array: macOS ships bash 3.2, where an empty array under `set -u` is "unbound".
+# Plain variables, not an array, so the script also works with macOS's bash 3.2.
 API_PID=""
 WEB_PID=""
 cleanup() {
