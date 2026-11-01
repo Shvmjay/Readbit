@@ -44,10 +44,18 @@ export default function QuizPlayer() {
       qc.invalidateQueries({ queryKey: ["mastery", bookId] });
     },
   });
+  const [advancing, setAdvancing] = useState(false);
   async function next() {
-    setFeedback(null);
-    setSelected(null);
-    await view.refetch();
+    // Load the next question before clearing the feedback; clearing first briefly re-showed the answered
+    // question as if it were still open.
+    setAdvancing(true);
+    try {
+      await view.refetch();
+    } finally {
+      setFeedback(null);
+      setSelected(null);
+      setAdvancing(false);
+    }
     window.scrollTo({ top: 0 });
   }
 
@@ -104,7 +112,7 @@ export default function QuizPlayer() {
       {feedback && (
         <>
           <ExplanationPanel bookId={bookId} feedback={feedback} />
-          <button className="btn-primary w-full py-3" onClick={next} data-testid="next-question" autoFocus>
+          <button className="btn-primary w-full py-3" onClick={next} disabled={advancing} data-testid="next-question" autoFocus>
             {isLast ? t("quiz.finish") : t("quiz.next")}<ArrowRight className="h-4 w-4" aria-hidden />
           </button>
         </>
