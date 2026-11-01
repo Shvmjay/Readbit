@@ -116,8 +116,8 @@ export function ResetForm() {
   const { email, password } = useSchemas();
   const [done, setDone] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
-  const schema = token ? z.object({ password }) : z.object({ email });
-  const { register, handleSubmit, formState } = useForm<Record<string, string>>({ resolver: zodResolver(schema as z.ZodTypeAny) });
+  const schema: z.ZodType<Record<string, string>, Record<string, string>> = token ? z.object({ password }) : z.object({ email });
+  const { register, handleSubmit, formState } = useForm<Record<string, string>>({ resolver: zodResolver(schema) });
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
     try {

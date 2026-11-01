@@ -97,9 +97,10 @@ test("Journey C — adaptive lesson with feedback, completion, mastery and revis
     await expect(q.locator("input[type=radio]").first()).toBeDisabled(); // selection is locked
     answered++;
     await page.getByTestId("next-question").click();
-    if (await page.getByTestId("quiz-result").isVisible().catch(() => false)) break;
-    await expect(page.getByTestId("quiz-question").or(page.getByTestId("quiz-result"))).toBeVisible();
+    // Feedback disappears only once the next question (or the result) has loaded.
+    await expect(fb).toBeHidden();
     if (await page.getByTestId("quiz-result").isVisible()) break;
+    await expect(page.getByTestId("quiz-question")).toBeVisible();
   }
   await expect(page.getByTestId("quiz-result")).toContainText(`You answered ${answered - 1} of ${answered} correctly.`);
   await page.getByRole("link", { name: "Back to lessons" }).click();
