@@ -87,24 +87,47 @@ docs/                     PRD, architecture, AI grounding, security, testing, de
 - Python 3.11+, Node.js 22+
 - For the full stack: PostgreSQL 16 with pgvector, Redis 7, S3-compatible storage — or just Docker
 
-## Quick start (no services required)
+## Quick start: run it on your computer (one command)
 
-SQLite, filesystem storage, in-process background jobs, offline AI engine:
+You need **Python 3.11+** and **Node.js 20+**. Nothing else: no database server, Redis, Docker or API key.
 
 ```bash
-# API
+git clone https://github.com/Shvmjay/Readbit.git
+cd Readbit
+./scripts/dev.sh                 # Mac / Linux
+```
+
+```powershell
+git clone https://github.com/Shvmjay/Readbit.git
+cd Readbit
+powershell -ExecutionPolicy Bypass -File scripts\dev.ps1     # Windows
+```
+
+The script checks your Python and Node versions, installs everything on the first run (a few minutes), builds the
+web app, starts the API and the web app, waits until both answer, and opens **http://localhost:3000**. If port 3000 or
+8000 is taken it picks the next free one and prints the address. Leave the window open while you use Readbit; press
+**Ctrl+C** to stop both servers. Later runs skip the install and only rebuild when the code changed.
+
+- Sample books to upload: `evals/fixtures/` (e.g. `attentive_mind.pdf`, `backyard_compost.epub`, `hindi_reading.epub`)
+- Start with empty data: `./scripts/dev.sh --reset` (Windows: `scripts\dev.ps1 -Reset`)
+- Local data and logs: `.data/local/` (`api.log`, `web.log`)
+- Uses the offline AI engine; set `DEFAULT_LLM_PROVIDER=anthropic` and `LLM_API_KEY` before running to use Claude
+
+### Running the pieces by hand (for development)
+
+```bash
+# API (hot reload)
 cd services/api
 pip install -e ".[dev]"
-python ../../scripts/generate_fixtures.py        # sample books in evals/fixtures
 DATABASE_URL=sqlite:///./readbit-dev.db JOB_BACKEND=thread uvicorn app.main:app --reload --port 8000
 
-# Web (new terminal)
+# Web (new terminal, hot reload)
 cd apps/web
 npm install
 API_URL=http://localhost:8000 npm run dev         # http://localhost:3000
 ```
 
-Upload `evals/fixtures/attentive_mind.pdf` to try it. API docs: http://localhost:8000/docs.
+API docs: http://localhost:8000/docs. Fixture books are committed; regenerate them with `python scripts/generate_fixtures.py`.
 
 ## Full stack with Docker Compose
 
