@@ -6,7 +6,8 @@
 #
 # Optional environment: API_PORT (default 8000), WEB_PORT (default 3000), NO_OPEN=1 (don't open a browser).
 # Data lives in .data/local/ (git-ignored). Press Ctrl+C to stop both servers.
-set -euo pipefail
+# No `set -u`: macOS ships bash 3.2, whose `-u` reports "unbound variable" for valid code (e.g. empty arrays).
+set -eo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_DIR="$ROOT/services/api"
@@ -75,13 +76,16 @@ if [ ! -f "$BUILD_ID" ] || [ -n "$(find "$WEB_DIR/app" "$WEB_DIR/components" "$W
 fi
 
 # ---------------------------------------------------------------- start
-PIDS=()
+# Plain variables, not an array, so the script also works with macOS's bash 3.2.
+API_PID=""
+WEB_PID=""
 cleanup() {
   trap - EXIT INT TERM
-  if [ "${#PIDS[@]}" -gt 0 ]; then
+  if [ -n "$API_PID$WEB_PID" ]; then
     say "Stopping Readbit…"
-    kill "${PIDS[@]}" 2>/dev/null || true
-    wait "${PIDS[@]}" 2>/dev/null || true
+    # shellcheck disable=SC2086  # intentionally unquoted: skips whichever PID is empty
+    kill $WEB_PID $API_PID 2>/dev/null || true
+    wait $WEB_PID $API_PID 2>/dev/null || true
   fi
 }
 trap cleanup EXIT INT TERM
@@ -98,7 +102,7 @@ say "Starting the API on port $API_PORT…"
     EMAIL_DELIVERY=log LOG_LEVEL="${LOG_LEVEL:-WARNING}"
   exec "$VENV/bin/python" -m uvicorn app.main:app --host 127.0.0.1 --port "$API_PORT"
 ) > "$DATA_DIR/api.log" 2>&1 &
-PIDS+=("$!")
+API_PID="$!"
 
 wait_for() {  # url, name, log, pid
   for _ in $(seq 1 90); do
@@ -108,16 +112,16 @@ wait_for() {  # url, name, log, pid
   done
   tail -n 30 "$3"; die "The $2 did not start within 90 seconds (full log: $3)."
 }
-wait_for "http://127.0.0.1:$API_PORT/health" "API" "$DATA_DIR/api.log" "${PIDS[0]}"
+wait_for "http://127.0.0.1:$API_PORT/health" "API" "$DATA_DIR/api.log" "$API_PID"
 
 say "Starting the web app on port $WEB_PORT…"
 (
   cd "$WEB_DIR"
   export API_URL="http://127.0.0.1:$API_PORT" PORT="$WEB_PORT" NEXT_TELEMETRY_DISABLED=1
-  exec npx --no-install next start -p "$WEB_PORT"
+  exec node "$WEB_DIR/node_modules/next/dist/bin/next" start -p "$WEB_PORT"  # not npx: npx leaves next running on stop
 ) > "$DATA_DIR/web.log" 2>&1 &
-PIDS+=("$!")
-wait_for "http://127.0.0.1:$WEB_PORT/" "web app" "$DATA_DIR/web.log" "${PIDS[1]}"
+WEB_PID="$!"
+wait_for "http://127.0.0.1:$WEB_PORT/" "web app" "$DATA_DIR/web.log" "$WEB_PID"
 
 cat <<EOF
 
@@ -134,6 +138,6 @@ if [ -z "${NO_OPEN:-}" ]; then
 fi
 
 # Stay in the foreground until a server exits or the user presses Ctrl+C.
-while kill -0 "${PIDS[0]}" 2>/dev/null && kill -0 "${PIDS[1]}" 2>/dev/null; do sleep 2; done
+while kill -0 "$API_PID" 2>/dev/null && kill -0 "$WEB_PID" 2>/dev/null; do sleep 2; done
 say "A server stopped; see $DATA_DIR/api.log and $DATA_DIR/web.log."
 exit 1
